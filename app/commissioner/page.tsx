@@ -1,5 +1,6 @@
 
 import Link from "next/link";
+import { commissioner } from "../../lib/server-auth";
 
 const tools = [
   {
@@ -20,7 +21,27 @@ const tools = [
   }
 ];
 
-export default function CommissionerPage() {
+export default async function CommissionerPage() {
+  const user = await commissioner();
+
+  if (!user) {
+    return (
+      <main className="shell">
+        <div className="kicker">THE BOYS • COMMISSIONER</div>
+        <h1>COMMISSIONER SIGN IN REQUIRED</h1>
+        <p className="muted">
+          This area is restricted to the league commissioner.
+        </p>
+        <p className="muted">
+          Secure sign-in setup is coming next.
+        </p>
+        <Link href="/" className="button">
+          Back to Dashboard
+        </Link>
+      </main>
+    );
+  }
+
   return (
     <main className="shell">
       <div className="kicker">THE BOYS • COMMISSIONER</div>
@@ -49,4 +70,3 @@ export default function CommissionerPage() {
     </main>
   );
 }
-  
