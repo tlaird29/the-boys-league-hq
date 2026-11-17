@@ -29,3 +29,15 @@ No Yahoo OAuth credentials, Supabase project, database, user accounts, sync jobs
 5. Build calculations and reconcile against Yahoo's standings/matchups before publishing records.
 6. Add commissioner login, review queue, weekly sync, newsletter editor, and email delivery.
 7. Deploy to a hosting provider after secrets and access controls are configured.
+
+## Live integration milestone (November 2026)
+
+Added server-only commissioner authorization, Yahoo OAuth connect/callback with CSRF state checking, encrypted server-side token persistence, refresh flow, connection status endpoint, and read-only NFL game discovery endpoint. These routes are **code only** until a Supabase project, Yahoo-approved client credentials, and deployment are configured. The league import, public live stats, scheduled newsletter and email sending are not implemented.
+
+1. Create Supabase project; execute `supabase/schema.sql` then `supabase/002_yahoo_connections.sql` in the SQL editor.
+2. Enable Supabase Auth and configure an email-based sign-in flow. The commissioner page deliberately does not include an untested login UI; authentication must be established before Yahoo authorization works.
+3. Copy `.env.example` to `.env.local` and fill Supabase URL/anon key/service-role key, `COMMISSIONER_EMAIL`, Yahoo client ID/secret/redirect URI, and `TOKEN_ENCRYPTION_KEY` (e.g. `openssl rand -hex 32`). Never commit `.env.local`.
+4. Install Node.js 20+; run `npm install` and `npm run dev`. The Yahoo callback URI must match the developer app's registered redirect URI exactly. For production set it to `https://YOUR_DOMAIN/api/yahoo/callback`.
+5. After sign-in, open `/commissioner` and use Authorize Yahoo. The `/api/yahoo/preview` endpoint reads NFL game information as a smoke test. No write calls to Yahoo are implemented.
+
+Security note: Keep Supabase service-role key and Yahoo client secret server-side. Production launch requires a tested Supabase sign-in route, secure deployment, and end-to-end integration testing. Do not expose private data to unauthenticated viewers.
