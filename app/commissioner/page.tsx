@@ -1,5 +1,6 @@
 
 import Link from "next/link";
+import SignOutButton from "../sign-out-button";
 import { commissioner } from "../../lib/server-auth";
 
 const tools = [
@@ -51,16 +52,12 @@ export default async function CommissionerPage() {
         Yahoo integration, and weekly newsletters.
       </p>
 
-      <div className="grid">
-        {tools.map((tool) => (
-          <section className="card span6" key={tool.title}>
-            <div className="label">ADMIN TOOL</div>
-            <h2>{tool.title}</h2>
-            <p className="muted">{tool.description}</p>
-            <span className="pill">SETUP PENDING</span>
-          </section>
-        ))}
-      </div>
+      <div style={{ marginTop: 24, display: "flex", gap: 12, flexWrap: "wrap" }}>
+  <Link href="/" className="button">
+    Back to Dashboard
+  </Link>
+  <SignOutButton />
+</div>
 
       <div style={{ marginTop: 24 }}>
         <Link href="/" className="button">
