@@ -57,6 +57,11 @@ export default async function CommissionerPage() {
     Back to Dashboard
   </Link>
   <SignOutButton />
+
+<Link href="/api/yahoo/connect" className="button">
+  Connect Yahoo Fantasy
+</Link>
+
 </div>
 
       <div style={{ marginTop: 24 }}>
