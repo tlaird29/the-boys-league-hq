@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useState } from "react";
 
 const positions = ["QB", "RB", "WR", "TE", "K", "DEF"] as const;
-
 type Position = (typeof positions)[number];
 
 type PlayerSeason = {
@@ -25,6 +24,45 @@ const playerSeasons: Record<Position, PlayerSeason[]> = {
   DEF: [],
 };
 
+type Manager = {
+  name: string;
+  seasons: number;
+  regularWins: number;
+  regularLosses: number;
+  regularTies: number;
+  playoffWins: number;
+  playoffLosses: number;
+  playoffTies: number;
+  pointsFor: number;
+  pointsAgainst: number;
+  longestWinStreak: number;
+  longestLossStreak: number;
+  championships: number;
+  finals: number;
+  playoffAppearances: number;
+};
+
+const managers: Manager[] = [];
+
+type Championship = {
+  year: number;
+  champion: string;
+  runnerUp: string;
+  championScore: number;
+  runnerUpScore: number;
+};
+
+const championshipHistory: Championship[] = [];
+
+const legacyTabs = [
+  { id: "career", label: "Career Records" },
+  { id: "scoring", label: "Scoring" },
+  { id: "streaks", label: "Streaks" },
+  { id: "championships", label: "Championships" },
+] as const;
+
+type LegacyTab = (typeof legacyTabs)[number]["id"];
+
 const recordCategories = [
   {
     id: "wins",
@@ -34,14 +72,12 @@ const recordCategories = [
     columns: ["RANK", "MANAGER", "W-L-T", "WIN %"],
     spotlight: "ALL-TIME WINS LEADER",
     records: [
-      "Career regular-season wins",
-      "Career playoff wins",
-      "Career win percentage",
-      "Most wins in a single season",
-      "Longest winning streak",
-      "Most consecutive playoff appearances",
+      "Most career wins",
+      "Most wins in a season",
+      "Highest career win percentage",
+      "Most consecutive winning seasons",
+      "Most undefeated weeks",
     ],
-    limit: "All managers",
   },
   {
     id: "scores",
@@ -58,12 +94,11 @@ const recordCategories = [
     records: [
       "Top 25 highest weekly scores",
       "Top 25 lowest weekly scores",
-      "Most points in a single season",
-      "Highest average points per game",
+      "Most points in a season",
+      "Highest points-per-game average",
       "Highest playoff week score",
-      "Most points in a championship matchup",
+      "Highest championship game score",
     ],
-    limit: "Top 25",
   },
   {
     id: "blowouts",
@@ -83,34 +118,560 @@ const recordCategories = [
       "Biggest playoff blowout",
       "Closest playoff matchup",
       "Biggest championship blowout",
-      "Largest winning margin in a season",
+      "Closest championship game",
     ],
-    limit: "Top 25",
   },
-  {
-    id: "championships",
-    icon: "👑",
-    title: "Championship Records",
-    description: "Champions, contenders, and playoff legends.",
-    columns: [
-      "RANK",
+];
+
+const panelStyle: React.CSSProperties = {
+  background: "#ffffff",
+  border: "1px solid #e2e9e4",
+  borderRadius: 16,
+  overflow: "hidden",
+};
+
+const darkStyle: React.CSSProperties = {
+  background: "#14251f",
+  color: "#ffffff",
+  borderRadius: 14,
+  padding: 24,
+};
+
+const cellStyle: React.CSSProperties = {
+  padding: "14px 12px",
+  borderBottom: "1px solid #e2e9e4",
+  whiteSpace: "nowrap",
+  fontSize: 13,
+};
+
+const mutedStyle: React.CSSProperties = {
+  color: "#68736d",
+  fontSize: 13,
+};
+
+function Placeholder({
+  columns,
+  message = "Awaiting verified historical Yahoo league data.",
+}: {
+  columns: number;
+  message?: string;
+}) {
+  return (
+    <tr>
+      <td
+        colSpan={columns}
+        style={{
+          padding: "35px 18px",
+          textAlign: "center",
+          color: "#68736d",
+          lineHeight: 1.7,
+        }}
+      >
+        🏈 {message}
+      </td>
+    </tr>
+  );
+}
+
+function DataTable({
+  headings,
+  children,
+}: {
+  headings: string[];
+  children: React.ReactNode;
+}) {
+  return (
+    <div style={{ overflowX: "auto", width: "100%" }}>
+      <table
+        style={{
+          width: "100%",
+          borderCollapse: "collapse",
+          textAlign: "left",
+          minWidth: 520,
+        }}
+      >
+        <thead>
+          <tr style={{ background: "#edf5f0" }}>
+            {headings.map((heading) => (
+              <th
+                key={heading}
+                style={{
+                  ...cellStyle,
+                  fontSize: 11,
+                  color: "#52665a",
+                  letterSpacing: 0.5,
+                }}
+              >
+                {heading}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>{children}</tbody>
+      </table>
+    </div>
+  );
+}
+
+function percent(wins: number, losses: number, ties = 0) {
+  const total = wins + losses + ties;
+  return total
+    ? (((wins + ties / 2) / total) * 100).toFixed(1) + "%"
+    : "—";
+}
+
+function points(value: number) {
+  return value.toFixed(2);
+}
+
+function lifetimeRecord(manager: Manager) {
+  return [
+    manager.regularWins + manager.playoffWins,
+    manager.regularLosses + manager.playoffLosses,
+    manager.regularTies + manager.playoffTies,
+  ].join("-");
+}
+
+function legacyRanking(tab: LegacyTab) {
+  const list = [...managers];
+
+  if (tab === "career") {
+    return list.sort(
+      (a, b) =>
+        b.regularWins +
+        b.playoffWins -
+        (a.regularWins + a.playoffWins)
+    );
+  }
+
+  if (tab === "scoring") {
+    return list.sort((a, b) => b.pointsFor - a.pointsFor);
+  }
+
+  if (tab === "streaks") {
+    return list.sort(
+      (a, b) => b.longestWinStreak - a.longestWinStreak
+    );
+  }
+
+  return list.sort(
+    (a, b) =>
+      b.championships - a.championships ||
+      b.finals - a.finals ||
+      b.playoffWins - a.playoffWins
+  );
+}
+
+function LegacyTable({ tab }: { tab: LegacyTab }) {
+  const ranked = legacyRanking(tab);
+
+  const headings: Record<LegacyTab, string[]> = {
+    career: [
+      "#",
+      "MANAGER",
+      "SEASONS",
+      "LIFETIME W-L-T",
+      "REG. W-L-T",
+      "PLAYOFF W-L-T",
+      "WIN %",
+    ],
+    scoring: [
+      "#",
+      "MANAGER",
+      "POINTS FOR",
+      "POINTS AGAINST",
+      "DIFFERENTIAL",
+      "AVG. PPG",
+    ],
+    streaks: [
+      "#",
+      "MANAGER",
+      "LONGEST WIN STREAK",
+      "LONGEST LOSING STREAK",
+    ],
+    championships: [
+      "#",
       "MANAGER",
       "TITLES",
-      "APPEARANCES",
+      "FINALS",
+      "RUNNER-UP",
+      "PLAYOFF APPS.",
+      "PLAYOFF WINS",
+      "PLAYOFF WIN %",
     ],
-    spotlight: "ALL-TIME CHAMPIONSHIP LEADER",
-    records: [
-      "Most league championships",
+  };
+
+  return (
+    <DataTable headings={headings[tab]}>
+      {ranked.length === 0 ? (
+        <Placeholder
+          columns={headings[tab].length}
+          message="Manager rankings will appear once verified season and playoff results are imported."
+        />
+      ) : (
+        ranked.map((manager, index) => {
+          const totalWins =
+            manager.regularWins + manager.playoffWins;
+          const totalLosses =
+            manager.regularLosses + manager.playoffLosses;
+          const totalTies =
+            manager.regularTies + manager.playoffTies;
+          const games = totalWins + totalLosses + totalTies;
+
+          let values: (string | number)[];
+
+          if (tab === "career") {
+            values = [
+              index + 1,
+              manager.name,
+              manager.seasons,
+              lifetimeRecord(manager),
+              [
+                manager.regularWins,
+                manager.regularLosses,
+                manager.regularTies,
+              ].join("-"),
+              [
+                manager.playoffWins,
+                manager.playoffLosses,
+                manager.playoffTies,
+              ].join("-"),
+              percent(totalWins, totalLosses, totalTies),
+            ];
+          } else if (tab === "scoring") {
+            values = [
+              index + 1,
+              manager.name,
+              points(manager.pointsFor),
+              points(manager.pointsAgainst),
+              points(manager.pointsFor - manager.pointsAgainst),
+              games ? points(manager.pointsFor / games) : "—",
+            ];
+          } else if (tab === "streaks") {
+            values = [
+              index + 1,
+              manager.name,
+              manager.longestWinStreak,
+              manager.longestLossStreak,
+            ];
+          } else {
+            values = [
+              index + 1,
+              manager.name,
+              manager.championships,
+              manager.finals,
+              manager.finals - manager.championships,
+              manager.playoffAppearances,
+              manager.playoffWins,
+              percent(
+                manager.playoffWins,
+                manager.playoffLosses,
+                manager.playoffTies
+              ),
+            ];
+          }
+
+          return (
+            <tr key={manager.name}>
+              {values.map((value, i) => (
+                <td
+                  key={i}
+                  style={{
+                    ...cellStyle,
+                    fontWeight: i === 1 ? 800 : 500,
+                    color: i === 1 ? "#14251f" : "#263d32",
+                  }}
+                >
+                  {value}
+                </td>
+              ))}
+            </tr>
+          );
+        })
+      )}
+    </DataTable>
+  );
+}
+
+function ManagerLegacy() {
+  const [tab, setTab] = useState<LegacyTab>("career");
+  const ranked = legacyRanking("championships");
+  const leader = ranked[0];
+
+  const extraRecords: Record<LegacyTab, string[]> = {
+    career: [
+      "Most lifetime wins",
+      "Highest combined win percentage",
+      "Best regular-season record",
+      "Most regular-season wins",
+      "Most playoff wins",
+      "Most seasons played",
+    ],
+    scoring: [
+      "Most lifetime points scored",
+      "Most lifetime points against",
+      "Best career point differential",
+      "Highest career points per game",
+      "Most points in a single season",
+      "Most playoff points scored",
+    ],
+    streaks: [
+      "Longest winning streak",
+      "Longest losing streak",
+      "Most consecutive winning seasons",
+      "Longest playoff winning streak",
+      "Most consecutive playoff appearances",
+      "Best single-season win streak",
+    ],
+    championships: [
+      "Most championships",
       "Most championship appearances",
       "Most runner-up finishes",
       "Most playoff appearances",
-      "Career playoff win percentage",
+      "Most playoff wins",
+      "Best playoff win percentage",
+      "Back-to-back championships",
       "Longest championship drought",
-      "Year-by-year championship results",
     ],
-    limit: "Full history",
-  },
-];
+  };
+
+  return (
+    <details style={panelStyle}>
+      <summary
+        style={{
+          padding: 22,
+          cursor: "pointer",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: 14,
+          }}
+        >
+          <div>
+            <div style={{ fontSize: 30, marginBottom: 8 }}>
+              👑
+            </div>
+            <h3>Manager Legacy & Championship History</h3>
+            <p className="muted">
+              Every manager. Every win. Every point.
+              Every championship.
+            </p>
+            <span
+              style={{
+                fontSize: 11,
+                color: "#159c73",
+                fontWeight: 800,
+              }}
+            >
+              COMPLETE CAREER HISTORY
+            </span>
+          </div>
+          <span className="pill">OPEN ▾</span>
+        </div>
+      </summary>
+
+      <div
+        style={{
+          padding: 20,
+          borderTop: "1px solid #e2e9e4",
+        }}
+      >
+        <div style={darkStyle}>
+          <div
+            style={{
+              color: "#48d6a8",
+              fontSize: 11,
+              fontWeight: 800,
+              letterSpacing: 2,
+            }}
+          >
+            THE BOYS LEAGUE • LEGACY HALL
+          </div>
+
+          <h2 style={{ marginTop: 10, fontSize: 38 }}>
+            MANAGER LEGACY
+          </h2>
+
+          <p style={{ color: "#c5d4cd", lineHeight: 1.6 }}>
+            Career records include regular-season and playoff
+            games. Lifetime scoring includes postseason points.
+            Winning and losing streaks reset each season.
+          </p>
+
+          <div
+            style={{
+              borderTop: "1px solid #476055",
+              marginTop: 20,
+              paddingTop: 20,
+              textAlign: "center",
+            }}
+          >
+            <div
+              style={{
+                color: "#e9c875",
+                fontSize: 12,
+                fontWeight: 800,
+                letterSpacing: 1,
+              }}
+            >
+              👑 CHAMPIONSHIP KING
+            </div>
+
+            <div
+              style={{
+                color: "#48d6a8",
+                fontSize: 28,
+                fontWeight: 900,
+                marginTop: 10,
+              }}
+            >
+              {leader ? leader.name : "AWAITING HISTORY"}
+            </div>
+
+            <p style={{ color: "#c5d4cd" }}>
+              {leader
+                ? `${leader.championships} titles • ${lifetimeRecord(leader)} lifetime record • ${points(leader.pointsFor)} points`
+                : "The all-time championship leader will be featured here."}
+            </p>
+          </div>
+        </div>
+
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 8,
+            marginTop: 24,
+            marginBottom: 20,
+          }}
+        >
+          {legacyTabs.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => setTab(item.id)}
+              aria-pressed={tab === item.id}
+              style={{
+                padding: "11px 14px",
+                borderRadius: 9,
+                cursor: "pointer",
+                fontWeight: 800,
+                fontSize: 12,
+                border: "1px solid #14251f",
+                background:
+                  tab === item.id ? "#14251f" : "#ffffff",
+                color:
+                  tab === item.id ? "#48d6a8" : "#14251f",
+              }}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+
+        <h3 style={{ marginBottom: 15 }}>
+          {tab === "career"
+            ? "ALL-TIME MANAGER STANDINGS"
+            : tab === "scoring"
+            ? "ALL-TIME SCORING LEADERS"
+            : tab === "streaks"
+            ? "WINNING & LOSING STREAKS"
+            : "CHAMPIONSHIP & PLAYOFF RECORDS"}
+        </h3>
+
+        <LegacyTable tab={tab} />
+
+        <p style={mutedStyle}>
+          {tab === "career"
+            ? "Ranked by combined lifetime wins, including playoffs. Win percentage counts ties as half a win."
+            : tab === "scoring"
+            ? "Includes regular-season and playoff points. Average points per game uses all recorded games."
+            : tab === "streaks"
+            ? "Streaks include playoff games but restart at the beginning of each season."
+            : "Ranked by titles, then championship appearances, then playoff wins."}
+        </p>
+
+        <h3 style={{ marginTop: 30, marginBottom: 14 }}>
+          MORE MANAGER RECORDS
+        </h3>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns:
+              "repeat(auto-fit, minmax(min(100%, 200px), 1fr))",
+            gap: 12,
+          }}
+        >
+          {extraRecords[tab].map((record) => (
+            <div
+              key={record}
+              style={{
+                background: "#f4f8f5",
+                border: "1px solid #e2e9e4",
+                borderRadius: 12,
+                padding: 16,
+              }}
+            >
+              <strong style={{ fontSize: 12 }}>
+                {record}
+              </strong>
+              <p style={mutedStyle}>
+                Awaiting historical data
+              </p>
+            </div>
+          ))}
+        </div>
+
+        {tab === "championships" && (
+          <div style={{ marginTop: 30 }}>
+            <h3 style={{ marginBottom: 14 }}>
+              YEAR-BY-YEAR CHAMPIONSHIP HISTORY
+            </h3>
+
+            <DataTable
+              headings={[
+                "SEASON",
+                "CHAMPION",
+                "RUNNER-UP",
+                "FINAL SCORE",
+              ]}
+            >
+              {championshipHistory.length === 0 ? (
+                <Placeholder
+                  columns={4}
+                  message="Championship results from 2020 onward will appear after import."
+                />
+              ) : (
+                [...championshipHistory]
+                  .sort((a, b) => b.year - a.year)
+                  .map((game) => (
+                    <tr key={game.year}>
+                      <td style={cellStyle}>{game.year}</td>
+                      <td style={cellStyle}>
+                        🏆 {game.champion}
+                      </td>
+                      <td style={cellStyle}>
+                        {game.runnerUp}
+                      </td>
+                      <td style={cellStyle}>
+                        {points(game.championScore)} -{" "}
+                        {points(game.runnerUpScore)}
+                      </td>
+                    </tr>
+                  ))
+              )}
+            </DataTable>
+          </div>
+        )}
+      </div>
+    </details>
+  );
+}
 
 export default function RecordsPage() {
   const [position, setPosition] = useState<Position>("QB");
@@ -121,25 +682,26 @@ export default function RecordsPage() {
 
   return (
     <main className="shell">
-      <div className="kicker">THE BOYS • EST. 2020</div>
+      <div className="kicker">
+        THE BOYS • EST. 2020
+      </div>
 
       <h1>THE RECORD BOOK</h1>
 
       <p className="muted">
         The greatest performances, historic seasons,
-        and most legendary records in The Boys League history.
+        legendary managers, and championship legacies
+        in The Boys League history.
       </p>
 
-      {/* TOP 25 PLAYER SEASONS */}
+      {/* PLAYER SEASON LEADERBOARDS */}
 
       <section
         style={{
-          background: "#14251f",
-          color: "#ffffff",
-          borderRadius: 18,
-          padding: 24,
+          ...darkStyle,
           marginTop: 28,
           marginBottom: 28,
+          borderRadius: 18,
         }}
       >
         <div
@@ -158,16 +720,15 @@ export default function RecordsPage() {
         </h2>
 
         <p style={{ color: "#c5d4cd", lineHeight: 1.6 }}>
-          The 25 highest-scoring individual player seasons
-          at every position, ranked by total fantasy points
-          across the regular season and fantasy playoffs.
+          Top 25 individual player seasons by position.
+          Fantasy regular season + fantasy playoffs.
         </p>
 
         <div
           style={{
             display: "flex",
-            gap: 8,
             flexWrap: "wrap",
+            gap: 8,
             marginTop: 22,
             marginBottom: 22,
           }}
@@ -184,10 +745,7 @@ export default function RecordsPage() {
                 cursor: "pointer",
                 fontWeight: 800,
                 fontSize: 14,
-                border:
-                  position === pos
-                    ? "1px solid #48d6a8"
-                    : "1px solid #476055",
+                border: "1px solid #476055",
                 background:
                   position === pos ? "#48d6a8" : "#263d32",
                 color:
@@ -199,162 +757,84 @@ export default function RecordsPage() {
           ))}
         </div>
 
-        <div
-          style={{
-            background: "#ffffff",
-            color: "#101512",
-            borderRadius: 14,
-            overflow: "hidden",
-          }}
-        >
+        <div style={panelStyle}>
           <div
             style={{
               padding: 20,
               background: "#edf5f0",
-              borderBottom: "1px solid #dce7df",
+              color: "#14251f",
             }}
           >
             <div className="label">
               HISTORICAL PLAYER LEADERBOARD
             </div>
-
             <h3 style={{ marginTop: 6 }}>
               TOP 25 {position} SEASONS
             </h3>
-
-            <p
-              style={{
-                fontSize: 12,
-                color: "#68736d",
-                marginBottom: 0,
-              }}
-            >
-              Regular season + fantasy playoffs • 2020–2026
+            <p style={mutedStyle}>
+              Regular season + playoffs • 2020 onward
             </p>
           </div>
 
-          <div style={{ overflowX: "auto" }}>
-            <table
-              style={{
-                width: "100%",
-                borderCollapse: "collapse",
-                textAlign: "left",
-                minWidth: 540,
-              }}
+          <div style={{ color: "#14251f" }}>
+            <DataTable
+              headings={[
+                "RANK",
+                "PLAYER",
+                "YEAR",
+                "FANTASY TEAM / OWNER",
+                "POINTS",
+              ]}
             >
-              <thead>
-                <tr style={{ background: "#f5f7f5" }}>
-                  {[
-                    "RANK",
-                    "PLAYER",
-                    "YEAR",
-                    "FANTASY TEAM / OWNER",
-                    "POINTS",
-                  ].map((heading) => (
-                    <th
-                      key={heading}
-                      style={{
-                        padding: "15px 12px",
-                        fontSize: 11,
-                        color: "#68736d",
-                        letterSpacing: 1,
-                        borderBottom: "1px solid #e2e9e4",
-                      }}
-                    >
-                      {heading}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-
-              <tbody>
-                {rankings.length === 0 ? (
-                  <tr>
+              {rankings.length === 0 ? (
+                <Placeholder
+                  columns={5}
+                  message={`${position} player seasons awaiting import.`}
+                />
+              ) : (
+                rankings.map((season, index) => (
+                  <tr
+                    key={`${season.player}-${season.year}-${index}`}
+                  >
+                    <td style={cellStyle}>
+                      #{index + 1}
+                    </td>
                     <td
-                      colSpan={5}
                       style={{
-                        padding: "42px 20px",
-                        textAlign: "center",
-                        color: "#68736d",
-                        lineHeight: 1.8,
+                        ...cellStyle,
+                        fontWeight: 800,
                       }}
                     >
-                      <div style={{ fontSize: 30 }}>🏆</div>
-
-                      <strong>
-                        {position} records awaiting import
-                      </strong>
-
-                      <div>
-                        Historical player scores will appear
-                        here once verified Yahoo league data
-                        is available.
+                      {season.player}
+                    </td>
+                    <td style={cellStyle}>
+                      {season.year}
+                    </td>
+                    <td style={cellStyle}>
+                      <strong>{season.team}</strong>
+                      <div style={mutedStyle}>
+                        {season.owner}
                       </div>
                     </td>
-                  </tr>
-                ) : (
-                  rankings.map((season, index) => (
-                    <tr
-                      key={`${season.player}-${season.year}-${index}`}
+                    <td
                       style={{
-                        borderBottom: "1px solid #e2e9e4",
+                        ...cellStyle,
+                        fontWeight: 800,
+                        color: "#159c73",
                       }}
                     >
-                      <td
-                        style={{
-                          padding: 14,
-                          fontWeight: 800,
-                        }}
-                      >
-                        #{index + 1}
-                      </td>
-
-                      <td
-                        style={{
-                          padding: 14,
-                          fontWeight: 700,
-                        }}
-                      >
-                        {season.player}
-                      </td>
-
-                      <td style={{ padding: 14 }}>
-                        {season.year}
-                      </td>
-
-                      <td style={{ padding: 14 }}>
-                        <strong>{season.team}</strong>
-
-                        <div
-                          style={{
-                            fontSize: 12,
-                            color: "#68736d",
-                          }}
-                        >
-                          {season.owner}
-                        </div>
-                      </td>
-
-                      <td
-                        style={{
-                          padding: 14,
-                          fontWeight: 800,
-                          color: "#159c73",
-                        }}
-                      >
-                        {season.points.toFixed(2)}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                      {points(season.points)}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </DataTable>
           </div>
 
           <div
             style={{
-              padding: "14px 20px",
-              borderTop: "1px solid #e2e9e4",
+              padding: 14,
+              background: "#ffffff",
               color: "#68736d",
               fontSize: 12,
             }}
@@ -365,19 +845,21 @@ export default function RecordsPage() {
         </div>
       </section>
 
-      {/* ALL-TIME LEAGUE RECORDS */}
+      {/* LEAGUE RECORD CATEGORIES */}
 
       <section style={{ marginTop: 35 }}>
-        <div className="label">THE HISTORY BOOKS</div>
+        <div className="label">
+          THE HISTORY BOOKS
+        </div>
 
-        <h2 style={{ marginTop: 8, marginBottom: 12 }}>
+        <h2 style={{ marginTop: 8 }}>
           ALL-TIME LEAGUE RECORDS
         </h2>
 
         <p className="muted">
-          Explore the greatest achievements, worst defeats,
-          and most legendary managers in league history.
-          Select any category to open its record book.
+          Select a category to explore the greatest
+          performances, career records, and championship
+          history since 2020.
         </p>
 
         <div
@@ -390,18 +872,12 @@ export default function RecordsPage() {
           {recordCategories.map((record) => (
             <details
               key={record.id}
-              style={{
-                background: "#ffffff",
-                border: "1px solid #e2e9e4",
-                borderRadius: 16,
-                overflow: "hidden",
-              }}
+              style={panelStyle}
             >
               <summary
                 style={{
                   padding: 22,
                   cursor: "pointer",
-                  listStyle: "none",
                 }}
               >
                 <div
@@ -424,57 +900,28 @@ export default function RecordsPage() {
 
                     <h3>{record.title}</h3>
 
-                    <p
-                      className="muted"
-                      style={{ marginBottom: 10 }}
-                    >
+                    <p className="muted">
                       {record.description}
                     </p>
-
-                    <span
-                      style={{
-                        fontSize: 11,
-                        color: "#159c73",
-                        fontWeight: 800,
-                        letterSpacing: 1,
-                      }}
-                    >
-                      {record.limit.toUpperCase()} LEADERBOARD
-                    </span>
                   </div>
 
-                  <span
-                    style={{
-                      background: "#14251f",
-                      color: "#48d6a8",
-                      padding: "10px 14px",
-                      borderRadius: 10,
-                      fontWeight: 800,
-                      fontSize: 12,
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    VIEW RECORDS ▾
+                  <span className="pill">
+                    OPEN ▾
                   </span>
                 </div>
               </summary>
 
               <div
                 style={{
-                  padding: 22,
+                  padding: 20,
                   borderTop: "1px solid #e2e9e4",
                 }}
               >
-                {/* RECORD HOLDER SPOTLIGHT */}
-
                 <div
                   style={{
-                    background: "#14251f",
-                    color: "#ffffff",
-                    borderRadius: 14,
-                    padding: 24,
-                    marginBottom: 24,
+                    ...darkStyle,
                     textAlign: "center",
+                    marginBottom: 24,
                   }}
                 >
                   <div
@@ -482,7 +929,6 @@ export default function RecordsPage() {
                       color: "#e9c875",
                       fontSize: 12,
                       fontWeight: 800,
-                      letterSpacing: 2,
                     }}
                   >
                     👑 RECORD HOLDER SPOTLIGHT
@@ -492,89 +938,25 @@ export default function RecordsPage() {
                     {record.spotlight}
                   </h3>
 
-                  <div
-                    style={{
-                      fontSize: 32,
-                      fontWeight: 900,
-                      color: "#48d6a8",
-                      marginTop: 16,
-                    }}
-                  >
-                    —
-                  </div>
-
-                  <p
-                    style={{
-                      color: "#c5d4cd",
-                      fontSize: 13,
-                    }}
-                  >
+                  <p style={{ color: "#c5d4cd" }}>
                     Awaiting verified historical results
                   </p>
                 </div>
 
-                {/* HISTORICAL LEADERBOARD */}
-
-                <h3 style={{ marginBottom: 15 }}>
+                <h3 style={{ marginBottom: 14 }}>
                   HISTORICAL LEADERBOARD
                 </h3>
 
-                <div style={{ overflowX: "auto" }}>
-                  <table
-                    style={{
-                      width: "100%",
-                      minWidth: 480,
-                      borderCollapse: "collapse",
-                      textAlign: "left",
-                    }}
-                  >
-                    <thead>
-                      <tr
-                        style={{
-                          background: "#edf5f0",
-                        }}
-                      >
-                        {record.columns.map((column) => (
-                          <th
-                            key={column}
-                            style={{
-                              padding: 14,
-                              fontSize: 11,
-                              color: "#68736d",
-                              letterSpacing: 1,
-                            }}
-                          >
-                            {column}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-
-                    <tbody>
-                      <tr>
-                        <td
-                          colSpan={record.columns.length}
-                          style={{
-                            padding: "35px 15px",
-                            textAlign: "center",
-                            color: "#68736d",
-                            fontSize: 14,
-                          }}
-                        >
-                          Historical rankings will appear
-                          after league data is imported.
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* ADDITIONAL RECORDS */}
+                <DataTable headings={record.columns}>
+                  <Placeholder
+                    columns={record.columns.length}
+                  />
+                </DataTable>
 
                 <h3
                   style={{
                     marginTop: 28,
-                    marginBottom: 15,
+                    marginBottom: 14,
                   }}
                 >
                   ADDITIONAL RECORDS
@@ -584,7 +966,7 @@ export default function RecordsPage() {
                   style={{
                     display: "grid",
                     gridTemplateColumns:
-                      "repeat(auto-fit, minmax(min(100%, 220px), 1fr))",
+                      "repeat(auto-fit, minmax(min(100%, 200px), 1fr))",
                     gap: 12,
                   }}
                 >
@@ -592,51 +974,30 @@ export default function RecordsPage() {
                     <div
                       key={item}
                       style={{
-                        padding: 16,
                         background: "#f4f8f5",
+                        padding: 16,
                         borderRadius: 12,
                         border: "1px solid #e2e9e4",
                       }}
                     >
-                      <div
-                        style={{
-                          fontSize: 12,
-                          fontWeight: 800,
-                          marginBottom: 8,
-                        }}
-                      >
+                      <strong style={{ fontSize: 12 }}>
                         {item}
-                      </div>
-
-                      <div
-                        style={{
-                          color: "#68736d",
-                          fontSize: 12,
-                        }}
-                      >
+                      </strong>
+                      <p style={mutedStyle}>
                         Awaiting historical data
-                      </div>
+                      </p>
                     </div>
                   ))}
                 </div>
-
-                <p
-                  style={{
-                    marginTop: 22,
-                    color: "#68736d",
-                    fontSize: 12,
-                  }}
-                >
-                  Records will be calculated using verified
-                  league history from 2020 onward.
-                </p>
               </div>
             </details>
           ))}
+
+          {/* COMBINED MANAGER + CHAMPIONSHIP SECTION */}
+
+          <ManagerLegacy />
         </div>
       </section>
-
-      {/* HOME BUTTON */}
 
       <div style={{ marginTop: 24 }}>
         <Link href="/" className="button">
