@@ -12,6 +12,84 @@ const nav = [
   ["Commissioner", "/commissioner"],
 ];
 
+const edition = {
+  label: "THE WEDNESDAY REPORT",
+  issue: "NEXT EDITION COMING SOON",
+  headline: "THE BOYS ARE AT IT AGAIN",
+  deck:
+    "Another week of fantasy football. Another round of questionable decisions, improbable victories, and unforgettable receipts.",
+  byline: "BY THE BOYS LEAGUE NEWS DESK",
+
+  opening:
+    "The official Wednesday Report will take over this front page each week. The biggest storyline, every matchup recap, and the latest league drama will be published right here.",
+
+  lead:
+    "This space is reserved for the full opening column. Expect a proper sportswriter's breakdown of the week's chaos, complete with the kind of trash talk that belongs in the league history books.",
+
+  matchups: [
+    {
+      title: "MATCHUP REPORT NO. 1",
+      text: "The first matchup recap will appear here, including the final score, standout players, and the manager who has some explaining to do.",
+    },
+    {
+      title: "MATCHUP REPORT NO. 2",
+      text: "Another battle, another permanent receipt. This column will cover the second matchup and its biggest turning points.",
+    },
+    {
+      title: "MATCHUP REPORT NO. 3",
+      text: "The third matchup gets its own column, complete with analysis, controversy, and appropriately unreasonable commentary.",
+    },
+    {
+      title: "MATCHUP REPORT NO. 4",
+      text: "A full recap of the fourth matchup, from the stars who delivered to the lineup decisions that didn't.",
+    },
+    {
+      title: "MATCHUP REPORT NO. 5",
+      text: "The final matchup of the week closes out the scoreboard, but the embarrassment may last considerably longer.",
+    },
+  ],
+
+  goat:
+    "The week's most dominant fantasy performance will be recognized here.",
+
+  bum:
+    "The week's most spectacular disappointment will be documented here.",
+
+  closing: "ICE TF UP! 🏈",
+};
+
+const ink = "#202019";
+const faded = "#5b574e";
+const rule = "#37362f";
+const paper = "#f3efdf";
+
+const smallCaps: React.CSSProperties = {
+  fontFamily: "Arial, Helvetica, sans-serif",
+  fontSize: 10,
+  fontWeight: 800,
+  letterSpacing: 1.6,
+  textTransform: "uppercase",
+};
+
+const bodyCopy: React.CSSProperties = {
+  fontFamily: "Georgia, 'Times New Roman', serif",
+  fontSize: 16,
+  lineHeight: 1.75,
+  color: ink,
+  textAlign: "left",
+  hyphens: "auto",
+};
+
+const storyHeading: React.CSSProperties = {
+  fontFamily: "Georgia, 'Times New Roman', serif",
+  fontWeight: 900,
+  fontSize: 25,
+  lineHeight: 1.15,
+  textTransform: "none",
+  letterSpacing: "-0.025em",
+  margin: "9px 0 12px",
+};
+
 export default function Home() {
   return (
     <>
@@ -45,205 +123,397 @@ export default function Home() {
         </nav>
       </header>
 
-      <main className="shell">
-        <div className="grid">
-          {/* THE MISSION */}
+      <main
+        style={{
+          maxWidth: 1160,
+          margin: "28px auto",
+          padding: "0 12px",
+        }}
+      >
+        <article
+          style={{
+            backgroundColor: paper,
+            color: ink,
+            padding: "clamp(16px, 4vw, 48px)",
+            border: "1px solid #c9c1ad",
+            boxShadow: "0 12px 28px #18251b20",
+            backgroundImage:
+              "repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(65,55,35,0.012) 4px)",
+          }}
+        >
+          {/* NEWSPAPER TOP LINE */}
 
-          <section className="card span8">
-            <div className="label">THE MISSION</div>
+          <div
+            style={{
+              ...smallCaps,
+              display: "flex",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: 10,
+              paddingBottom: 9,
+              borderBottom: `1px solid ${rule}`,
+            }}
+          >
+            <span>EST. MMXX</span>
+            <span>THE BOYS FANTASY FOOTBALL LEAGUE</span>
+            <span>WEDNESDAY EDITION</span>
+          </div>
 
-            <h2 style={{ marginTop: 8 }}>
-              RECORDS ARE FOREVER.
-            </h2>
+          {/* CLASSIC NEWSPAPER MASTHEAD */}
 
-            <p className="muted">
-              A permanent home for every champion,
-              rivalry, legendary performance, and
-              historically embarrassing Sunday since 2020.
-            </p>
-
-            <Link href="/records" className="button">
-              Explore the Record Book
-            </Link>
-          </section>
-
-          {/* LEAGUE STATUS */}
-
-          <section className="card span4">
-            <div className="label">LEAGUE STATUS</div>
-
-            <div className="stat mint">
-              2020–2026
-            </div>
-
-            <p className="muted">
-              Seven seasons of league history.
-              Historical statistics are awaiting
-              Yahoo Fantasy Sports API access.
-            </p>
-
-            <span
-              className="pill"
+          <div
+            style={{
+              textAlign: "center",
+              padding: "16px 0 12px",
+              borderBottom: `5px double ${rule}`,
+            }}
+          >
+            <div
               style={{
-                background: "#dff4ed",
-                color: "#167d5b",
+                fontFamily:
+                  "'Old English Text MT', 'UnifrakturCook', 'Times New Roman', serif",
+                fontSize: "clamp(45px, 9vw, 108px)",
+                fontWeight: 900,
+                letterSpacing: "-0.055em",
+                lineHeight: 1.05,
               }}
             >
-              YAHOO IMPORT PENDING
-            </span>
-          </section>
-
-          {/* MANAGER PROFILES */}
-
-          <section className="card span6">
-            <div className="row">
-              <h2>MANAGER PROFILES</h2>
-
-              <span
-                className="pill"
-                style={{
-                  background: "#dff4ed",
-                  color: "#167d5b",
-                }}
-              >
-                10 MANAGERS
-              </span>
+              The Boys Times
             </div>
 
-            <p className="muted">
-              Explore every active manager's career
-              history, lifetime wins, playoff records,
-              scoring totals, winning streaks,
-              and championship legacy.
-            </p>
-
-            <Link href="/managers" className="button">
-              Meet the Managers
-            </Link>
-          </section>
-
-          {/* CHAMPIONSHIP RAFTERS */}
-
-          <section className="card span6">
-            <div className="row">
-              <h2>CHAMPIONSHIP RAFTERS</h2>
-
-              <span
-                className="pill"
-                style={{
-                  background: "#f5e8bd",
-                  color: "#6d5310",
-                }}
-              >
-                HISTORY
-              </span>
-            </div>
-
-            <p className="muted">
-              Every season's champion gets a permanent
-              banner hanging in The Boys League rafters.
-            </p>
-
-            <Link href="/rafters" className="button">
-              Visit the Rafters
-            </Link>
-          </section>
-
-          {/* MANAGER LEGACY */}
-
-          <section className="card span6">
-            <div className="label">
-              THE HISTORY BOOKS
-            </div>
-
-            <h2 style={{ marginTop: 8 }}>
-              MANAGER LEGACY
-            </h2>
-
-            <p className="muted">
-              All-time career records, points scored,
-              points against, playoff wins,
-              winning streaks, and championship history.
-            </p>
-
-            <Link href="/records" className="button">
-              Explore Manager Legacy
-            </Link>
-          </section>
-
-          {/* WEDNESDAY REPORT */}
-
-          <section className="card span6">
-            <div className="label">
-              THE WEEKLY RECEIPTS
-            </div>
-
-            <h2 style={{ marginTop: 8 }}>
-              WEDNESDAY REPORT
-            </h2>
-
-            <p className="muted">
-              Weekly matchup analysis, player-performance
-              breakdowns, and fresh fantasy football
-              trash talk.
-            </p>
-
-            <span
-              className="pill"
+            <div
               style={{
-                background: "#dff4ed",
-                color: "#167d5b",
+                ...smallCaps,
+                fontSize: 11,
+                marginTop: 10,
               }}
             >
-              AUTOMATION PLANNED
-            </span>
+              ALL THE NEWS THAT&apos;S FIT TO ROAST
+            </div>
+          </div>
+
+          {/* EDITION INFORMATION */}
+
+          <div
+            style={{
+              ...smallCaps,
+              display: "flex",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: 10,
+              padding: "11px 0",
+              borderBottom: `2px solid ${rule}`,
+            }}
+          >
+            <span>{edition.label}</span>
+            <span>{edition.issue}</span>
+            <span>PRICE: YOUR DIGNITY</span>
+          </div>
+
+          {/* MAIN FRONT PAGE HEADLINE */}
+
+          <section
+            style={{
+              textAlign: "center",
+              padding: "26px 0 20px",
+              borderBottom: `1px solid ${rule}`,
+            }}
+          >
+            <div
+              style={{
+                ...smallCaps,
+                marginBottom: 14,
+              }}
+            >
+              THE OFFICIAL LEAGUE DISPATCH
+            </div>
+
+            <h2
+              style={{
+                fontFamily:
+                  "Georgia, 'Times New Roman', serif",
+                fontSize: "clamp(35px, 6.5vw, 78px)",
+                fontWeight: 900,
+                letterSpacing: "-0.045em",
+                lineHeight: 1.02,
+                textTransform: "uppercase",
+                margin: 0,
+              }}
+            >
+              {edition.headline}
+            </h2>
+
+            <p
+              style={{
+                fontFamily:
+                  "Georgia, 'Times New Roman', serif",
+                fontSize: "clamp(16px, 2vw, 21px)",
+                fontStyle: "italic",
+                lineHeight: 1.5,
+                maxWidth: 850,
+                margin: "18px auto 12px",
+                color: faded,
+              }}
+            >
+              {edition.deck}
+            </p>
+
+            <div
+              style={{
+                ...smallCaps,
+                fontSize: 10,
+                marginTop: 16,
+              }}
+            >
+              {edition.byline}
+            </div>
           </section>
 
-          {/* BUILD STATUS */}
+          {/* LEAD ARTICLE */}
 
-          <section className="card span12">
-            <h2>BUILD STATUS</h2>
+          <section
+            style={{
+              padding: "24px 0",
+              borderBottom: `3px double ${rule}`,
+            }}
+          >
+            <div
+              style={{
+                ...smallCaps,
+                textAlign: "center",
+                marginBottom: 18,
+              }}
+            >
+              FRONT PAGE • LEAD STORY
+            </div>
 
-            <div className="list">
-              <div className="item">
-                <span>Branding & Site Foundation</span>
-                <b className="mint">LIVE</b>
+            <div
+              style={{
+                columns: "260px 2",
+                columnGap: 30,
+                columnRule: "1px solid #b8b09d",
+              }}
+            >
+              <p
+                style={{
+                  ...bodyCopy,
+                  marginTop: 0,
+                }}
+              >
+                <span
+                  style={{
+                    float: "left",
+                    fontSize: 65,
+                    lineHeight: 0.85,
+                    paddingRight: 7,
+                    fontWeight: 900,
+                  }}
+                >
+                  {edition.opening.charAt(0)}
+                </span>
+                {edition.opening.slice(1)}
+              </p>
+
+              <p style={bodyCopy}>
+                {edition.lead}
+              </p>
+            </div>
+          </section>
+
+          {/* FIVE MATCHUP STORIES */}
+
+          <section
+            style={{
+              padding: "22px 0",
+              borderBottom: `3px double ${rule}`,
+            }}
+          >
+            <div
+              style={{
+                ...smallCaps,
+                textAlign: "center",
+                marginBottom: 8,
+              }}
+            >
+              THE SPORTS DESK
+            </div>
+
+            <h2
+              style={{
+                fontFamily:
+                  "Georgia, 'Times New Roman', serif",
+                fontSize: "clamp(29px, 4vw, 43px)",
+                textAlign: "center",
+                textTransform: "uppercase",
+                marginBottom: 24,
+              }}
+            >
+              AROUND THE LEAGUE
+            </h2>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns:
+                  "repeat(auto-fit, minmax(min(100%, 220px), 1fr))",
+                gap: 0,
+              }}
+            >
+              {edition.matchups.map((story, index) => (
+                <div
+                  key={index}
+                  style={{
+                    padding: "14px 18px",
+                    borderTop: `1px solid ${rule}`,
+                    borderRight:
+                      index % 2 === 0
+                        ? "1px solid #b8b09d"
+                        : "none",
+                  }}
+                >
+                  <div style={smallCaps}>
+                    GAME {index + 1} • MATCHUP RECAP
+                  </div>
+
+                  <h3 style={storyHeading}>
+                    {story.title}
+                  </h3>
+
+                  <p style={bodyCopy}>
+                    {story.text}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* GOAT AND BUM EDITORIAL */}
+
+          <section
+            style={{
+              padding: "24px 0",
+              borderBottom: `3px double ${rule}`,
+            }}
+          >
+            <div
+              style={{
+                ...smallCaps,
+                textAlign: "center",
+              }}
+            >
+              THE EDITORIAL BOARD
+            </div>
+
+            <h2
+              style={{
+                fontFamily:
+                  "Georgia, 'Times New Roman', serif",
+                fontSize: "clamp(28px, 4vw, 42px)",
+                textAlign: "center",
+                margin: "10px 0 22px",
+              }}
+            >
+              HONORS & DISHONORS
+            </h2>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns:
+                  "repeat(auto-fit, minmax(min(100%, 250px), 1fr))",
+                gap: 25,
+              }}
+            >
+              <div>
+                <div
+                  style={{
+                    ...smallCaps,
+                    paddingBottom: 9,
+                    borderBottom: `1px solid ${rule}`,
+                  }}
+                >
+                  THE WEEK&apos;S FINEST
+                </div>
+
+                <h3 style={storyHeading}>
+                  GOAT OF THE WEEK
+                </h3>
+
+                <p style={bodyCopy}>
+                  {edition.goat}
+                </p>
               </div>
 
-              <div className="item">
-                <span>Record Book & Manager Legacy</span>
-                <b className="mint">LIVE</b>
-              </div>
+              <div>
+                <div
+                  style={{
+                    ...smallCaps,
+                    paddingBottom: 9,
+                    borderBottom: `1px solid ${rule}`,
+                  }}
+                >
+                  THE WEEK&apos;S WORST
+                </div>
 
-              <div className="item">
-                <span>Manager Profiles</span>
-                <b className="mint">BUILT</b>
-              </div>
+                <h3 style={storyHeading}>
+                  BUM OF THE WEEK
+                </h3>
 
-              <div className="item">
-                <span>Yahoo Account Connection</span>
-                <b className="mint">CONNECTED</b>
-              </div>
-
-              <div className="item">
-                <span>Yahoo Fantasy Sports API Access</span>
-                <b>AWAITING APPROVAL</b>
-              </div>
-
-              <div className="item">
-                <span>2020–2026 Historical Import</span>
-                <b>AWAITING API ACCESS</b>
-              </div>
-
-              <div className="item">
-                <span>Wednesday Newsletter Automation</span>
-                <b>NOT ACTIVATED</b>
+                <p style={bodyCopy}>
+                  {edition.bum}
+                </p>
               </div>
             </div>
           </section>
-        </div>
 
-        <footer>
+          {/* SIGN-OFF */}
+
+          <div
+            style={{
+              padding: "28px 0",
+              textAlign: "center",
+            }}
+          >
+            <div
+              style={{
+                fontFamily:
+                  "Georgia, 'Times New Roman', serif",
+                fontSize: "clamp(29px, 5vw, 48px)",
+                fontWeight: 900,
+              }}
+            >
+              {edition.closing}
+            </div>
+
+            <div
+              style={{
+                ...smallCaps,
+                marginTop: 10,
+              }}
+            >
+              UNTIL NEXT WEDNESDAY
+            </div>
+          </div>
+
+          {/* PRINT EDITION FOOTER */}
+
+          <div
+            style={{
+              ...smallCaps,
+              display: "flex",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: 12,
+              borderTop: `5px double ${rule}`,
+              paddingTop: 13,
+            }}
+          >
+            <span>THE BOYS TIMES • EST. 2020</span>
+            <span>ALL RECEIPTS PRESERVED</span>
+          </div>
+        </article>
+
+        <footer style={{ textAlign: "center" }}>
           THE BOYS • PRIVATE LEAGUE HISTORY • EST. 2020
         </footer>
       </main>
