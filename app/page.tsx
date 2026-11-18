@@ -12,31 +12,24 @@ const nav = [
   ["Commissioner", "/commissioner"],
 ];
 
-// THE WEDNESDAY REPORT
-// All content below is placeholder material.
-// Real scores and articles will be added after data import.
-
+// Placeholder edition. No real scores are implied.
 const edition = {
   week: "NEXT EDITION COMING SOON",
   headline: "THE BOYS ARE AT IT AGAIN",
   subtitle:
     "Ten managers. Five matchups. One weekly reminder that confidence and competence are not the same thing.",
   byline: "THE BOYS LEAGUE NEWS DESK",
-
   paragraphs: [
     "The Boys Fantasy Football League is preparing another edition of its most respected, least professionally supervised publication. Ten managers enter every week convinced they've built a championship roster. By Tuesday morning, half of them are investigating whether Yahoo accidentally forgot to count somebody's touchdowns. The other half are updating the group chat like they personally invented football.",
 
-    "This is where the weekly opening monologue will appear. Every edition will begin with the biggest storyline in the league, whether that's an undefeated team finally getting humbled, a manager fumbling an easy win, or a trade proposal so offensive it deserves its own congressional hearing.",
+    "The opening monologue will kick off each edition with the biggest storyline in the league. Maybe an undefeated team finally gets humbled. Maybe a manager fumbles an easy win. Maybe a trade proposal arrives that's so offensive it deserves its own congressional hearing.",
 
-    "The first matchup will flow naturally into the article. Rather than opening another page or clicking a recap, readers will get the final score, key performances, managerial decisions, and an appropriately ruthless assessment of how the game unfolded.",
+    "From there, we'll move directly into the week's five matchups. No separate pages, no clickable recaps, and no cookie-cutter summaries. Every game gets its own paragraph, its own analysis, and its own reason for somebody to reconsider ever opening the group chat again.",
 
-    "From there, the column moves directly into the next matchup. The transitions will feel like a real sportswriter moving through the week's biggest stories, not a website trying to organize everything into separate boxes. Each game gets its own personality, and nobody gets to hide behind a generic recap.",
+    "We'll cover the players who carried their teams, the bench decisions that should trigger an internal investigation, and the managers whose confidence somehow survived another deeply embarrassing Sunday.",
 
-    "The remaining matchups will continue in the same format. We'll cover the players who carried their teams, the bench decisions that should trigger an internal investigation, and the managers whose confidence somehow survived another deeply embarrassing Sunday.",
-
-    "Once all five matchups have been covered, the article will wrap up with the league-wide implications: standings movement, playoff pressure, streaks, rivalries, and whatever fresh nonsense the group chat has contributed to the historical record.",
+    "The final stretch of the article will cover standings movement, playoff pressure, streaks, rivalries, and whatever fresh nonsense the league has contributed to the historical record. All of it will read like one continuous sports column, with natural transitions and fresh trash talk every week.",
   ],
-
   closing: "ICE TF UP! 🏈",
 };
 
@@ -52,7 +45,7 @@ const goat: WeeklyHonor = {
   team: null,
   points: null,
   commentary:
-    "The week's most dominant fantasy performance will be immortalized here, with a proper breakdown of why this player or manager deserves the crown.",
+    "The week's most dominant performance gets the spotlight, with the numbers, the context, and the kind of praise only this league could deliver.",
 };
 
 const bum: WeeklyHonor = {
@@ -60,7 +53,7 @@ const bum: WeeklyHonor = {
   team: null,
   points: null,
   commentary:
-    "A weekly tribute to poor decisions, unfortunate performances, and the kind of fantasy football disaster that should require a written apology.",
+    "A weekly tribute to poor decisions, historic collapses, and performances that should come with a formal apology to the rest of the roster.",
 };
 
 type PerfectSlot = {
@@ -70,10 +63,8 @@ type PerfectSlot = {
   points: number | null;
 };
 
-// These lineup slots are provisional.
-// They will be verified against Yahoo league settings.
+// Provisional lineup until Yahoo roster settings are confirmed.
 // Each player must appear only once.
-
 const perfectTeam: PerfectSlot[] = [
   { position: "QB", player: null, fantasyTeam: null, points: null },
   { position: "RB1", player: null, fantasyTeam: null, points: null },
@@ -92,7 +83,7 @@ const perfectTeamReady = perfectTeam.every(
 
 const perfectTeamTotal = perfectTeamReady
   ? perfectTeam.reduce(
-      (total, slot) => total + (slot.points ?? 0),
+      (sum, slot) => sum + (slot.points ?? 0),
       0
     )
   : null;
@@ -106,119 +97,31 @@ const smallPrint: CSSProperties = {
   fontFamily: "Arial, Helvetica, sans-serif",
   fontSize: 10,
   fontWeight: 800,
-  letterSpacing: 1.35,
+  letterSpacing: 1.2,
   textTransform: "uppercase",
 };
 
 const paragraphStyle: CSSProperties = {
   fontFamily: "Georgia, 'Times New Roman', serif",
-  fontSize: 16.5,
-  lineHeight: 1.85,
+  fontSize: 17,
+  lineHeight: 1.82,
   color: ink,
   textAlign: "left",
-  margin: "0 0 22px",
+  margin: "0 0 21px",
   overflowWrap: "break-word",
 };
 
-function HonorColumn({
-  title,
-  eyebrow,
-  honor,
-}: {
-  title: string;
-  eyebrow: string;
-  honor: WeeklyHonor;
-}) {
-  return (
-    <section
-      style={{
-        borderBottom: `3px double ${rule}`,
-        paddingBottom: 23,
-        marginBottom: 25,
-      }}
-    >
-      <div style={smallPrint}>{eyebrow}</div>
-
-      <h3
-        style={{
-          fontFamily: "Georgia, 'Times New Roman', serif",
-          fontSize: 27,
-          lineHeight: 1.1,
-          margin: "10px 0 14px",
-          textTransform: "uppercase",
-        }}
-      >
-        {title}
-      </h3>
-
-      <div
-        style={{
-          borderTop: `1px solid ${rule}`,
-          paddingTop: 12,
-        }}
-      >
-        <div
-          style={{
-            fontFamily: "Georgia, serif",
-            fontSize: 22,
-            fontWeight: 800,
-          }}
-        >
-          {honor.name ?? "TO BE ANNOUNCED"}
-        </div>
-
-        {honor.team && (
-          <div
-            style={{
-              ...smallPrint,
-              marginTop: 7,
-              color: faded,
-            }}
-          >
-            {honor.team}
-          </div>
-        )}
-
-        {honor.points !== null && (
-          <div
-            style={{
-              fontFamily: "Georgia, serif",
-              fontSize: 25,
-              fontWeight: 800,
-              marginTop: 9,
-            }}
-          >
-            {honor.points.toFixed(2)} PTS
-          </div>
-        )}
-
-        <p
-          style={{
-            ...paragraphStyle,
-            fontSize: 14.5,
-            lineHeight: 1.7,
-            marginTop: 13,
-            marginBottom: 0,
-          }}
-        >
-          {honor.commentary}
-        </p>
-      </div>
-    </section>
-  );
-}
-
 function PerfectTeamColumn() {
   return (
-    <section>
+    <aside className="boys-perfect-team">
       <div style={smallPrint}>
         THE ULTIMATE WEEKLY LINEUP
       </div>
 
       <h3
         style={{
-          fontFamily: "Georgia, 'Times New Roman', serif",
-          fontSize: 28,
+          fontFamily: "Georgia, serif",
+          fontSize: 25,
           lineHeight: 1.1,
           margin: "10px 0",
         }}
@@ -232,8 +135,8 @@ function PerfectTeamColumn() {
           fontSize: 13,
           fontStyle: "italic",
           color: faded,
-          lineHeight: 1.6,
-          marginBottom: 18,
+          lineHeight: 1.55,
+          marginBottom: 17,
         }}
       >
         The highest-scoring possible starting lineup
@@ -242,16 +145,15 @@ function PerfectTeamColumn() {
 
       <div
         style={{
-          borderTop: `3px double ${rule}`,
-          borderBottom: `1px solid ${rule}`,
-          padding: "10px 0",
+          ...smallPrint,
           display: "flex",
           justifyContent: "space-between",
-          gap: 10,
-          ...smallPrint,
+          borderTop: `3px double ${rule}`,
+          borderBottom: `1px solid ${rule}`,
+          padding: "9px 0",
         }}
       >
-        <span>POSITION / PLAYER</span>
+        <span>PLAYER</span>
         <span>PTS</span>
       </div>
 
@@ -260,17 +162,17 @@ function PerfectTeamColumn() {
           key={slot.position}
           style={{
             display: "grid",
-            gridTemplateColumns: "44px minmax(0, 1fr) auto",
-            gap: 8,
-            alignItems: "start",
+            gridTemplateColumns: "40px minmax(0, 1fr) auto",
+            gap: 6,
             padding: "11px 0",
             borderBottom: "1px solid #c5bdab",
+            alignItems: "start",
           }}
         >
           <strong
             style={{
               ...smallPrint,
-              fontSize: 11,
+              fontSize: 10,
               paddingTop: 3,
             }}
           >
@@ -281,7 +183,7 @@ function PerfectTeamColumn() {
             <div
               style={{
                 fontFamily: "Georgia, serif",
-                fontSize: 14,
+                fontSize: 13,
                 fontWeight: 700,
               }}
             >
@@ -305,7 +207,7 @@ function PerfectTeamColumn() {
           <strong
             style={{
               fontFamily: "Georgia, serif",
-              fontSize: 14,
+              fontSize: 13,
             }}
           >
             {slot.points === null
@@ -320,26 +222,23 @@ function PerfectTeamColumn() {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          gap: 10,
-          padding: "16px 0",
+          gap: 8,
+          padding: "15px 0",
           borderBottom: `3px double ${rule}`,
         }}
       >
-        <div style={smallPrint}>
-          PERFECT TEAM TOTAL
-        </div>
+        <span style={smallPrint}>TOTAL</span>
 
-        <div
+        <strong
           style={{
             fontFamily: "Georgia, serif",
-            fontSize: 27,
-            fontWeight: 900,
+            fontSize: 24,
           }}
         >
           {perfectTeamTotal === null
             ? "—"
             : perfectTeamTotal.toFixed(2)}
-        </div>
+        </strong>
       </div>
 
       <p
@@ -352,10 +251,97 @@ function PerfectTeamColumn() {
           marginTop: 13,
         }}
       >
-        Final lineup slots and FLEX eligibility will
-        follow the league's official Yahoo settings.
-        Each player may appear only once.
+        Official starting slots and FLEX eligibility
+        will follow Yahoo league settings. No player
+        can appear twice.
       </p>
+    </aside>
+  );
+}
+
+function HonorFeature({
+  title,
+  eyebrow,
+  honor,
+}: {
+  title: string;
+  eyebrow: string;
+  honor: WeeklyHonor;
+}) {
+  return (
+    <section
+      style={{
+        paddingBottom: 23,
+        marginBottom: 25,
+        borderBottom: `3px double ${rule}`,
+      }}
+    >
+      <div style={smallPrint}>{eyebrow}</div>
+
+      <h3
+        style={{
+          fontFamily: "Georgia, serif",
+          fontSize: 25,
+          lineHeight: 1.15,
+          margin: "10px 0 13px",
+        }}
+      >
+        {title}
+      </h3>
+
+      <div
+        style={{
+          borderTop: `1px solid ${rule}`,
+          paddingTop: 12,
+        }}
+      >
+        <div
+          style={{
+            fontFamily: "Georgia, serif",
+            fontSize: 21,
+            fontWeight: 800,
+          }}
+        >
+          {honor.name ?? "TO BE ANNOUNCED"}
+        </div>
+
+        {honor.team && (
+          <div
+            style={{
+              ...smallPrint,
+              color: faded,
+              marginTop: 8,
+            }}
+          >
+            {honor.team}
+          </div>
+        )}
+
+        {honor.points !== null && (
+          <div
+            style={{
+              fontFamily: "Georgia, serif",
+              fontSize: 23,
+              fontWeight: 800,
+              marginTop: 8,
+            }}
+          >
+            {honor.points.toFixed(2)} PTS
+          </div>
+        )}
+
+        <p
+          style={{
+            ...paragraphStyle,
+            fontSize: 14.5,
+            lineHeight: 1.7,
+            marginTop: 13,
+            marginBottom: 0,
+          }}
+        >
+          {honor.commentary}
+        </p>
+      </div>
     </section>
   );
 }
@@ -366,50 +352,74 @@ export default function Home() {
       <style>{`
         .boys-newspaper-layout {
           display: grid;
-          grid-template-columns: minmax(0, 1fr) 285px;
-          gap: 30px;
+          grid-template-columns:
+            minmax(0, 215px)
+            minmax(0, 1fr)
+            minmax(0, 215px);
+          gap: 25px;
         }
 
-        .boys-news-article {
+        .boys-perfect-team {
           min-width: 0;
-          padding-right: 30px;
           border-right: 1px solid #aaa18e;
+          padding-right: 22px;
         }
 
-        .boys-news-columns {
-          column-count: 2;
-          column-gap: 28px;
-          column-rule: 1px solid #c5bdab;
-        }
-
-        .boys-news-sidebar {
+        .boys-main-article {
           min-width: 0;
         }
 
-        @media (max-width: 850px) {
+        .boys-honors {
+          min-width: 0;
+          border-left: 1px solid #aaa18e;
+          padding-left: 22px;
+        }
+
+        @media (max-width: 950px) {
+          .boys-newspaper-layout {
+            grid-template-columns:
+              minmax(0, 190px)
+              minmax(0, 1fr);
+          }
+
+          .boys-honors {
+            grid-column: 1 / -1;
+            border-left: 0;
+            border-top: 4px double #38352d;
+            padding-left: 0;
+            padding-top: 25px;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 25px;
+          }
+        }
+
+        @media (max-width: 650px) {
           .boys-newspaper-layout {
             grid-template-columns: 1fr;
           }
 
-          .boys-news-article {
-            padding-right: 0;
-            border-right: 0;
+          .boys-main-article {
+            grid-row: 1;
           }
 
-          .boys-news-sidebar {
+          .boys-perfect-team {
+            grid-row: 2;
+            border-right: 0;
             border-top: 4px double #38352d;
+            padding-right: 0;
             padding-top: 25px;
           }
-        }
 
-        @media (max-width: 600px) {
-          .boys-news-columns {
-            column-count: 1;
+          .boys-honors {
+            grid-row: 3;
+            grid-column: 1;
+            grid-template-columns: 1fr;
           }
         }
       `}</style>
 
-      {/* LEAGUE HQ HEADER */}
+      {/* EXISTING LEAGUE HQ HEADER */}
 
       <header className="top">
         <div className="kicker">
@@ -441,11 +451,11 @@ export default function Home() {
         </nav>
       </header>
 
-      {/* PRINT NEWSPAPER */}
+      {/* PRINT NEWSPAPER FRONT PAGE */}
 
       <main
         style={{
-          maxWidth: 1180,
+          maxWidth: 1320,
           margin: "28px auto",
           padding: "0 12px",
         }}
@@ -454,14 +464,14 @@ export default function Home() {
           style={{
             background: paper,
             color: ink,
-            padding: "clamp(16px, 4vw, 48px)",
+            padding: "clamp(16px, 3vw, 42px)",
             border: "1px solid #c6beac",
             boxShadow: "0 10px 28px #14251f20",
             backgroundImage:
               "repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(55,45,25,0.012) 4px)",
           }}
         >
-          {/* TOP PRINT STRIP */}
+          {/* NEWSPAPER MASTHEAD */}
 
           <div
             style={{
@@ -470,16 +480,14 @@ export default function Home() {
               justifyContent: "space-between",
               flexWrap: "wrap",
               gap: 8,
-              borderBottom: `1px solid ${rule}`,
               paddingBottom: 10,
+              borderBottom: `1px solid ${rule}`,
             }}
           >
             <span>EST. MMXX</span>
             <span>THE BOYS FANTASY FOOTBALL LEAGUE</span>
             <span>WEDNESDAY EDITION</span>
           </div>
-
-          {/* NEWSPAPER MASTHEAD */}
 
           <div
             style={{
@@ -551,8 +559,7 @@ export default function Home() {
 
             <h2
               style={{
-                fontFamily:
-                  "Georgia, 'Times New Roman', serif",
+                fontFamily: "Georgia, 'Times New Roman', serif",
                 fontSize: "clamp(37px, 6.5vw, 76px)",
                 lineHeight: 1.04,
                 fontWeight: 900,
@@ -566,8 +573,7 @@ export default function Home() {
 
             <p
               style={{
-                fontFamily:
-                  "Georgia, 'Times New Roman', serif",
+                fontFamily: "Georgia, 'Times New Roman', serif",
                 fontSize: "clamp(17px, 2vw, 21px)",
                 fontStyle: "italic",
                 lineHeight: 1.55,
@@ -584,7 +590,7 @@ export default function Home() {
             </div>
           </section>
 
-          {/* MAIN STORY AND SIDEBAR */}
+          {/* THREE-COLUMN NEWSPAPER BODY */}
 
           <div
             className="boys-newspaper-layout"
@@ -594,9 +600,13 @@ export default function Home() {
               borderBottom: `4px double ${rule}`,
             }}
           >
-            {/* CONTINUOUS SATIRICAL ARTICLE */}
+            {/* LEFT: PERFECT TEAM */}
 
-            <section className="boys-news-article">
+            <PerfectTeamColumn />
+
+            {/* CENTER: ONE CONTINUOUS ARTICLE */}
+
+            <section className="boys-main-article">
               <div
                 style={{
                   ...smallPrint,
@@ -606,76 +616,65 @@ export default function Home() {
                 THE WEDNESDAY REPORT • LEAGUE DISPATCH
               </div>
 
-              <div className="boys-news-columns">
-                {edition.paragraphs.map(
-                  (paragraph, index) => (
-                    <p
-                      key={index}
-                      style={paragraphStyle}
-                    >
-                      {index === 0 ? (
-                        <>
-                          <span
-                            style={{
-                              float: "left",
-                              fontFamily:
-                                "Georgia, 'Times New Roman', serif",
-                              fontSize: 74,
-                              fontWeight: 900,
-                              lineHeight: 0.85,
-                              paddingRight: 8,
-                              paddingTop: 5,
-                            }}
-                          >
-                            {paragraph.charAt(0)}
-                          </span>
+              {edition.paragraphs.map((paragraph, index) => (
+                <p key={index} style={paragraphStyle}>
+                  {index === 0 ? (
+                    <>
+                      <span
+                        style={{
+                          float: "left",
+                          fontFamily: "Georgia, serif",
+                          fontSize: 70,
+                          fontWeight: 900,
+                          lineHeight: 0.85,
+                          paddingRight: 8,
+                          paddingTop: 5,
+                        }}
+                      >
+                        {paragraph.charAt(0)}
+                      </span>
 
-                          {paragraph.slice(1)}
-                        </>
-                      ) : (
-                        paragraph
-                      )}
-                    </p>
-                  )
-                )}
-              </div>
+                      {paragraph.slice(1)}
+                    </>
+                  ) : (
+                    paragraph
+                  )}
+                </p>
+              ))}
 
               <div
                 style={{
-                  fontFamily:
-                    "Georgia, 'Times New Roman', serif",
-                  fontSize: "clamp(29px, 4vw, 45px)",
-                  fontWeight: 900,
-                  textAlign: "center",
-                  padding: "25px 0 10px",
                   borderTop: `1px solid ${rule}`,
-                  marginTop: 12,
+                  marginTop: 20,
+                  paddingTop: 25,
+                  textAlign: "center",
+                  fontFamily: "Georgia, serif",
+                  fontSize: "clamp(27px, 4vw, 42px)",
+                  fontWeight: 900,
                 }}
               >
                 {edition.closing}
               </div>
             </section>
 
-            {/* NEWSPAPER SIDEBAR */}
+            {/* RIGHT: GOAT AND BUM */}
 
-            <aside className="boys-news-sidebar">
-              <HonorColumn
+            <aside className="boys-honors">
+              <HonorFeature
                 title="GOAT OF THE WEEK"
                 eyebrow="THE WEEK'S FINEST"
                 honor={goat}
               />
 
-              <HonorColumn
+              <HonorFeature
                 title="BUM OF THE WEEK"
                 eyebrow="THE WEEK'S WORST"
                 honor={bum}
               />
-
-              <PerfectTeamColumn />
             </aside>
           </div>
 
-          {/* PRINT FOOTER */}
+          {/* NEWSPAPER FOOTER */}
 
           <div
             style={{
