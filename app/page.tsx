@@ -1,9 +1,9 @@
 
 import Link from "next/link";
+import type { CSSProperties } from "react";
 
 const nav = [
   ["Dashboard", "/"],
-  ["Manager Profiles", "/managers"],
   ["Record Book", "/records"],
   ["Rafters", "/rafters"],
   ["Season Awards", "/awards"],
@@ -12,87 +12,405 @@ const nav = [
   ["Commissioner", "/commissioner"],
 ];
 
+// THE WEDNESDAY REPORT
+// All content below is placeholder material.
+// Real scores and articles will be added after data import.
+
 const edition = {
-  label: "THE WEDNESDAY REPORT",
-  issue: "NEXT EDITION COMING SOON",
+  week: "NEXT EDITION COMING SOON",
   headline: "THE BOYS ARE AT IT AGAIN",
-  deck:
-    "Another week of fantasy football. Another round of questionable decisions, improbable victories, and unforgettable receipts.",
-  byline: "BY THE BOYS LEAGUE NEWS DESK",
+  subtitle:
+    "Ten managers. Five matchups. One weekly reminder that confidence and competence are not the same thing.",
+  byline: "THE BOYS LEAGUE NEWS DESK",
 
-  opening:
-    "The official Wednesday Report will take over this front page each week. The biggest storyline, every matchup recap, and the latest league drama will be published right here.",
+  paragraphs: [
+    "The Boys Fantasy Football League is preparing another edition of its most respected, least professionally supervised publication. Ten managers enter every week convinced they've built a championship roster. By Tuesday morning, half of them are investigating whether Yahoo accidentally forgot to count somebody's touchdowns. The other half are updating the group chat like they personally invented football.",
 
-  lead:
-    "This space is reserved for the full opening column. Expect a proper sportswriter's breakdown of the week's chaos, complete with the kind of trash talk that belongs in the league history books.",
+    "This is where the weekly opening monologue will appear. Every edition will begin with the biggest storyline in the league, whether that's an undefeated team finally getting humbled, a manager fumbling an easy win, or a trade proposal so offensive it deserves its own congressional hearing.",
 
-  matchups: [
-    {
-      title: "MATCHUP REPORT NO. 1",
-      text: "The first matchup recap will appear here, including the final score, standout players, and the manager who has some explaining to do.",
-    },
-    {
-      title: "MATCHUP REPORT NO. 2",
-      text: "Another battle, another permanent receipt. This column will cover the second matchup and its biggest turning points.",
-    },
-    {
-      title: "MATCHUP REPORT NO. 3",
-      text: "The third matchup gets its own column, complete with analysis, controversy, and appropriately unreasonable commentary.",
-    },
-    {
-      title: "MATCHUP REPORT NO. 4",
-      text: "A full recap of the fourth matchup, from the stars who delivered to the lineup decisions that didn't.",
-    },
-    {
-      title: "MATCHUP REPORT NO. 5",
-      text: "The final matchup of the week closes out the scoreboard, but the embarrassment may last considerably longer.",
-    },
+    "The first matchup will flow naturally into the article. Rather than opening another page or clicking a recap, readers will get the final score, key performances, managerial decisions, and an appropriately ruthless assessment of how the game unfolded.",
+
+    "From there, the column moves directly into the next matchup. The transitions will feel like a real sportswriter moving through the week's biggest stories, not a website trying to organize everything into separate boxes. Each game gets its own personality, and nobody gets to hide behind a generic recap.",
+
+    "The remaining matchups will continue in the same format. We'll cover the players who carried their teams, the bench decisions that should trigger an internal investigation, and the managers whose confidence somehow survived another deeply embarrassing Sunday.",
+
+    "Once all five matchups have been covered, the article will wrap up with the league-wide implications: standings movement, playoff pressure, streaks, rivalries, and whatever fresh nonsense the group chat has contributed to the historical record.",
   ],
-
-  goat:
-    "The week's most dominant fantasy performance will be recognized here.",
-
-  bum:
-    "The week's most spectacular disappointment will be documented here.",
 
   closing: "ICE TF UP! 🏈",
 };
 
-const ink = "#202019";
-const faded = "#5b574e";
-const rule = "#37362f";
-const paper = "#f3efdf";
+type WeeklyHonor = {
+  name: string | null;
+  team: string | null;
+  points: number | null;
+  commentary: string;
+};
 
-const smallCaps: React.CSSProperties = {
+const goat: WeeklyHonor = {
+  name: null,
+  team: null,
+  points: null,
+  commentary:
+    "The week's most dominant fantasy performance will be immortalized here, with a proper breakdown of why this player or manager deserves the crown.",
+};
+
+const bum: WeeklyHonor = {
+  name: null,
+  team: null,
+  points: null,
+  commentary:
+    "A weekly tribute to poor decisions, unfortunate performances, and the kind of fantasy football disaster that should require a written apology.",
+};
+
+type PerfectSlot = {
+  position: string;
+  player: string | null;
+  fantasyTeam: string | null;
+  points: number | null;
+};
+
+// These lineup slots are provisional.
+// They will be verified against Yahoo league settings.
+// Each player must appear only once.
+
+const perfectTeam: PerfectSlot[] = [
+  { position: "QB", player: null, fantasyTeam: null, points: null },
+  { position: "RB1", player: null, fantasyTeam: null, points: null },
+  { position: "RB2", player: null, fantasyTeam: null, points: null },
+  { position: "WR1", player: null, fantasyTeam: null, points: null },
+  { position: "WR2", player: null, fantasyTeam: null, points: null },
+  { position: "TE", player: null, fantasyTeam: null, points: null },
+  { position: "FLEX", player: null, fantasyTeam: null, points: null },
+  { position: "K", player: null, fantasyTeam: null, points: null },
+  { position: "DEF", player: null, fantasyTeam: null, points: null },
+];
+
+const perfectTeamReady = perfectTeam.every(
+  (slot) => slot.player !== null && slot.points !== null
+);
+
+const perfectTeamTotal = perfectTeamReady
+  ? perfectTeam.reduce(
+      (total, slot) => total + (slot.points ?? 0),
+      0
+    )
+  : null;
+
+const ink = "#211f19";
+const faded = "#625e53";
+const paper = "#f4f0e4";
+const rule = "#38352d";
+
+const smallPrint: CSSProperties = {
   fontFamily: "Arial, Helvetica, sans-serif",
   fontSize: 10,
   fontWeight: 800,
-  letterSpacing: 1.6,
+  letterSpacing: 1.35,
   textTransform: "uppercase",
 };
 
-const bodyCopy: React.CSSProperties = {
+const paragraphStyle: CSSProperties = {
   fontFamily: "Georgia, 'Times New Roman', serif",
-  fontSize: 16,
-  lineHeight: 1.75,
+  fontSize: 16.5,
+  lineHeight: 1.85,
   color: ink,
   textAlign: "left",
-  hyphens: "auto",
+  margin: "0 0 22px",
+  overflowWrap: "break-word",
 };
 
-const storyHeading: React.CSSProperties = {
-  fontFamily: "Georgia, 'Times New Roman', serif",
-  fontWeight: 900,
-  fontSize: 25,
-  lineHeight: 1.15,
-  textTransform: "none",
-  letterSpacing: "-0.025em",
-  margin: "9px 0 12px",
-};
+function HonorColumn({
+  title,
+  eyebrow,
+  honor,
+}: {
+  title: string;
+  eyebrow: string;
+  honor: WeeklyHonor;
+}) {
+  return (
+    <section
+      style={{
+        borderBottom: `3px double ${rule}`,
+        paddingBottom: 23,
+        marginBottom: 25,
+      }}
+    >
+      <div style={smallPrint}>{eyebrow}</div>
+
+      <h3
+        style={{
+          fontFamily: "Georgia, 'Times New Roman', serif",
+          fontSize: 27,
+          lineHeight: 1.1,
+          margin: "10px 0 14px",
+          textTransform: "uppercase",
+        }}
+      >
+        {title}
+      </h3>
+
+      <div
+        style={{
+          borderTop: `1px solid ${rule}`,
+          paddingTop: 12,
+        }}
+      >
+        <div
+          style={{
+            fontFamily: "Georgia, serif",
+            fontSize: 22,
+            fontWeight: 800,
+          }}
+        >
+          {honor.name ?? "TO BE ANNOUNCED"}
+        </div>
+
+        {honor.team && (
+          <div
+            style={{
+              ...smallPrint,
+              marginTop: 7,
+              color: faded,
+            }}
+          >
+            {honor.team}
+          </div>
+        )}
+
+        {honor.points !== null && (
+          <div
+            style={{
+              fontFamily: "Georgia, serif",
+              fontSize: 25,
+              fontWeight: 800,
+              marginTop: 9,
+            }}
+          >
+            {honor.points.toFixed(2)} PTS
+          </div>
+        )}
+
+        <p
+          style={{
+            ...paragraphStyle,
+            fontSize: 14.5,
+            lineHeight: 1.7,
+            marginTop: 13,
+            marginBottom: 0,
+          }}
+        >
+          {honor.commentary}
+        </p>
+      </div>
+    </section>
+  );
+}
+
+function PerfectTeamColumn() {
+  return (
+    <section>
+      <div style={smallPrint}>
+        THE ULTIMATE WEEKLY LINEUP
+      </div>
+
+      <h3
+        style={{
+          fontFamily: "Georgia, 'Times New Roman', serif",
+          fontSize: 28,
+          lineHeight: 1.1,
+          margin: "10px 0",
+        }}
+      >
+        THE PERFECT TEAM
+      </h3>
+
+      <p
+        style={{
+          fontFamily: "Georgia, serif",
+          fontSize: 13,
+          fontStyle: "italic",
+          color: faded,
+          lineHeight: 1.6,
+          marginBottom: 18,
+        }}
+      >
+        The highest-scoring possible starting lineup
+        from the week's eligible players.
+      </p>
+
+      <div
+        style={{
+          borderTop: `3px double ${rule}`,
+          borderBottom: `1px solid ${rule}`,
+          padding: "10px 0",
+          display: "flex",
+          justifyContent: "space-between",
+          gap: 10,
+          ...smallPrint,
+        }}
+      >
+        <span>POSITION / PLAYER</span>
+        <span>PTS</span>
+      </div>
+
+      {perfectTeam.map((slot) => (
+        <div
+          key={slot.position}
+          style={{
+            display: "grid",
+            gridTemplateColumns: "44px minmax(0, 1fr) auto",
+            gap: 8,
+            alignItems: "start",
+            padding: "11px 0",
+            borderBottom: "1px solid #c5bdab",
+          }}
+        >
+          <strong
+            style={{
+              ...smallPrint,
+              fontSize: 11,
+              paddingTop: 3,
+            }}
+          >
+            {slot.position}
+          </strong>
+
+          <div style={{ minWidth: 0 }}>
+            <div
+              style={{
+                fontFamily: "Georgia, serif",
+                fontSize: 14,
+                fontWeight: 700,
+              }}
+            >
+              {slot.player ?? "Awaiting results"}
+            </div>
+
+            {slot.fantasyTeam && (
+              <div
+                style={{
+                  fontFamily: "Arial, sans-serif",
+                  fontSize: 10,
+                  color: faded,
+                  marginTop: 4,
+                }}
+              >
+                {slot.fantasyTeam}
+              </div>
+            )}
+          </div>
+
+          <strong
+            style={{
+              fontFamily: "Georgia, serif",
+              fontSize: 14,
+            }}
+          >
+            {slot.points === null
+              ? "—"
+              : slot.points.toFixed(2)}
+          </strong>
+        </div>
+      ))}
+
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: 10,
+          padding: "16px 0",
+          borderBottom: `3px double ${rule}`,
+        }}
+      >
+        <div style={smallPrint}>
+          PERFECT TEAM TOTAL
+        </div>
+
+        <div
+          style={{
+            fontFamily: "Georgia, serif",
+            fontSize: 27,
+            fontWeight: 900,
+          }}
+        >
+          {perfectTeamTotal === null
+            ? "—"
+            : perfectTeamTotal.toFixed(2)}
+        </div>
+      </div>
+
+      <p
+        style={{
+          fontFamily: "Georgia, serif",
+          fontSize: 12,
+          fontStyle: "italic",
+          lineHeight: 1.6,
+          color: faded,
+          marginTop: 13,
+        }}
+      >
+        Final lineup slots and FLEX eligibility will
+        follow the league's official Yahoo settings.
+        Each player may appear only once.
+      </p>
+    </section>
+  );
+}
 
 export default function Home() {
   return (
     <>
+      <style>{`
+        .boys-newspaper-layout {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) 285px;
+          gap: 30px;
+        }
+
+        .boys-news-article {
+          min-width: 0;
+          padding-right: 30px;
+          border-right: 1px solid #aaa18e;
+        }
+
+        .boys-news-columns {
+          column-count: 2;
+          column-gap: 28px;
+          column-rule: 1px solid #c5bdab;
+        }
+
+        .boys-news-sidebar {
+          min-width: 0;
+        }
+
+        @media (max-width: 850px) {
+          .boys-newspaper-layout {
+            grid-template-columns: 1fr;
+          }
+
+          .boys-news-article {
+            padding-right: 0;
+            border-right: 0;
+          }
+
+          .boys-news-sidebar {
+            border-top: 4px double #38352d;
+            padding-top: 25px;
+          }
+        }
+
+        @media (max-width: 600px) {
+          .boys-news-columns {
+            column-count: 1;
+          }
+        }
+      `}</style>
+
+      {/* LEAGUE HQ HEADER */}
+
       <header className="top">
         <div className="kicker">
           THE BOYS • FANTASY FOOTBALL • EST. 2020
@@ -123,35 +441,37 @@ export default function Home() {
         </nav>
       </header>
 
+      {/* PRINT NEWSPAPER */}
+
       <main
         style={{
-          maxWidth: 1160,
+          maxWidth: 1180,
           margin: "28px auto",
           padding: "0 12px",
         }}
       >
         <article
           style={{
-            backgroundColor: paper,
+            background: paper,
             color: ink,
             padding: "clamp(16px, 4vw, 48px)",
-            border: "1px solid #c9c1ad",
-            boxShadow: "0 12px 28px #18251b20",
+            border: "1px solid #c6beac",
+            boxShadow: "0 10px 28px #14251f20",
             backgroundImage:
-              "repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(65,55,35,0.012) 4px)",
+              "repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(55,45,25,0.012) 4px)",
           }}
         >
-          {/* NEWSPAPER TOP LINE */}
+          {/* TOP PRINT STRIP */}
 
           <div
             style={{
-              ...smallCaps,
+              ...smallPrint,
               display: "flex",
               justifyContent: "space-between",
               flexWrap: "wrap",
-              gap: 10,
-              paddingBottom: 9,
+              gap: 8,
               borderBottom: `1px solid ${rule}`,
+              paddingBottom: 10,
             }}
           >
             <span>EST. MMXX</span>
@@ -159,31 +479,31 @@ export default function Home() {
             <span>WEDNESDAY EDITION</span>
           </div>
 
-          {/* CLASSIC NEWSPAPER MASTHEAD */}
+          {/* NEWSPAPER MASTHEAD */}
 
           <div
             style={{
               textAlign: "center",
-              padding: "16px 0 12px",
+              padding: "18px 0 16px",
               borderBottom: `5px double ${rule}`,
             }}
           >
             <div
               style={{
                 fontFamily:
-                  "'Old English Text MT', 'UnifrakturCook', 'Times New Roman', serif",
-                fontSize: "clamp(45px, 9vw, 108px)",
-                fontWeight: 900,
-                letterSpacing: "-0.055em",
-                lineHeight: 1.05,
+                  "'UnifrakturCook', 'Old English Text MT', Georgia, serif",
+                fontSize: "clamp(58px, 10vw, 118px)",
+                fontWeight: 700,
+                lineHeight: 1.1,
+                letterSpacing: "-0.035em",
               }}
             >
-              The Boys Times
+              The Boys
             </div>
 
             <div
               style={{
-                ...smallCaps,
+                ...smallPrint,
                 fontSize: 11,
                 marginTop: 10,
               }}
@@ -192,50 +512,51 @@ export default function Home() {
             </div>
           </div>
 
-          {/* EDITION INFORMATION */}
+          {/* ISSUE LINE */}
 
           <div
             style={{
-              ...smallCaps,
+              ...smallPrint,
               display: "flex",
               justifyContent: "space-between",
               flexWrap: "wrap",
               gap: 10,
-              padding: "11px 0",
+              padding: "12px 0",
               borderBottom: `2px solid ${rule}`,
             }}
           >
-            <span>{edition.label}</span>
-            <span>{edition.issue}</span>
+            <span>THE WEDNESDAY REPORT</span>
+            <span>{edition.week}</span>
             <span>PRICE: YOUR DIGNITY</span>
           </div>
 
-          {/* MAIN FRONT PAGE HEADLINE */}
+          {/* MAIN HEADLINE */}
 
           <section
             style={{
               textAlign: "center",
-              padding: "26px 0 20px",
+              padding: "30px 0 25px",
               borderBottom: `1px solid ${rule}`,
             }}
           >
             <div
               style={{
-                ...smallCaps,
+                ...smallPrint,
                 marginBottom: 14,
               }}
             >
-              THE OFFICIAL LEAGUE DISPATCH
+              THE LEAGUE&apos;S MOST UNNECESSARY
+              INVESTIGATIVE JOURNALISM
             </div>
 
             <h2
               style={{
                 fontFamily:
                   "Georgia, 'Times New Roman', serif",
-                fontSize: "clamp(35px, 6.5vw, 78px)",
+                fontSize: "clamp(37px, 6.5vw, 76px)",
+                lineHeight: 1.04,
                 fontWeight: 900,
                 letterSpacing: "-0.045em",
-                lineHeight: 1.02,
                 textTransform: "uppercase",
                 margin: 0,
               }}
@@ -247,268 +568,126 @@ export default function Home() {
               style={{
                 fontFamily:
                   "Georgia, 'Times New Roman', serif",
-                fontSize: "clamp(16px, 2vw, 21px)",
+                fontSize: "clamp(17px, 2vw, 21px)",
                 fontStyle: "italic",
-                lineHeight: 1.5,
-                maxWidth: 850,
-                margin: "18px auto 12px",
+                lineHeight: 1.55,
+                maxWidth: 800,
+                margin: "18px auto",
                 color: faded,
               }}
             >
-              {edition.deck}
+              {edition.subtitle}
             </p>
 
-            <div
-              style={{
-                ...smallCaps,
-                fontSize: 10,
-                marginTop: 16,
-              }}
-            >
-              {edition.byline}
+            <div style={smallPrint}>
+              BY {edition.byline}
             </div>
           </section>
 
-          {/* LEAD ARTICLE */}
+          {/* MAIN STORY AND SIDEBAR */}
 
-          <section
+          <div
+            className="boys-newspaper-layout"
             style={{
-              padding: "24px 0",
-              borderBottom: `3px double ${rule}`,
+              paddingTop: 30,
+              paddingBottom: 25,
+              borderBottom: `4px double ${rule}`,
             }}
           >
-            <div
-              style={{
-                ...smallCaps,
-                textAlign: "center",
-                marginBottom: 18,
-              }}
-            >
-              FRONT PAGE • LEAD STORY
-            </div>
+            {/* CONTINUOUS SATIRICAL ARTICLE */}
 
-            <div
-              style={{
-                columns: "260px 2",
-                columnGap: 30,
-                columnRule: "1px solid #b8b09d",
-              }}
-            >
-              <p
+            <section className="boys-news-article">
+              <div
                 style={{
-                  ...bodyCopy,
-                  marginTop: 0,
+                  ...smallPrint,
+                  marginBottom: 18,
                 }}
               >
-                <span
-                  style={{
-                    float: "left",
-                    fontSize: 65,
-                    lineHeight: 0.85,
-                    paddingRight: 7,
-                    fontWeight: 900,
-                  }}
-                >
-                  {edition.opening.charAt(0)}
-                </span>
-                {edition.opening.slice(1)}
-              </p>
-
-              <p style={bodyCopy}>
-                {edition.lead}
-              </p>
-            </div>
-          </section>
-
-          {/* FIVE MATCHUP STORIES */}
-
-          <section
-            style={{
-              padding: "22px 0",
-              borderBottom: `3px double ${rule}`,
-            }}
-          >
-            <div
-              style={{
-                ...smallCaps,
-                textAlign: "center",
-                marginBottom: 8,
-              }}
-            >
-              THE SPORTS DESK
-            </div>
-
-            <h2
-              style={{
-                fontFamily:
-                  "Georgia, 'Times New Roman', serif",
-                fontSize: "clamp(29px, 4vw, 43px)",
-                textAlign: "center",
-                textTransform: "uppercase",
-                marginBottom: 24,
-              }}
-            >
-              AROUND THE LEAGUE
-            </h2>
-
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns:
-                  "repeat(auto-fit, minmax(min(100%, 220px), 1fr))",
-                gap: 0,
-              }}
-            >
-              {edition.matchups.map((story, index) => (
-                <div
-                  key={index}
-                  style={{
-                    padding: "14px 18px",
-                    borderTop: `1px solid ${rule}`,
-                    borderRight:
-                      index % 2 === 0
-                        ? "1px solid #b8b09d"
-                        : "none",
-                  }}
-                >
-                  <div style={smallCaps}>
-                    GAME {index + 1} • MATCHUP RECAP
-                  </div>
-
-                  <h3 style={storyHeading}>
-                    {story.title}
-                  </h3>
-
-                  <p style={bodyCopy}>
-                    {story.text}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* GOAT AND BUM EDITORIAL */}
-
-          <section
-            style={{
-              padding: "24px 0",
-              borderBottom: `3px double ${rule}`,
-            }}
-          >
-            <div
-              style={{
-                ...smallCaps,
-                textAlign: "center",
-              }}
-            >
-              THE EDITORIAL BOARD
-            </div>
-
-            <h2
-              style={{
-                fontFamily:
-                  "Georgia, 'Times New Roman', serif",
-                fontSize: "clamp(28px, 4vw, 42px)",
-                textAlign: "center",
-                margin: "10px 0 22px",
-              }}
-            >
-              HONORS & DISHONORS
-            </h2>
-
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns:
-                  "repeat(auto-fit, minmax(min(100%, 250px), 1fr))",
-                gap: 25,
-              }}
-            >
-              <div>
-                <div
-                  style={{
-                    ...smallCaps,
-                    paddingBottom: 9,
-                    borderBottom: `1px solid ${rule}`,
-                  }}
-                >
-                  THE WEEK&apos;S FINEST
-                </div>
-
-                <h3 style={storyHeading}>
-                  GOAT OF THE WEEK
-                </h3>
-
-                <p style={bodyCopy}>
-                  {edition.goat}
-                </p>
+                THE WEDNESDAY REPORT • LEAGUE DISPATCH
               </div>
 
-              <div>
-                <div
-                  style={{
-                    ...smallCaps,
-                    paddingBottom: 9,
-                    borderBottom: `1px solid ${rule}`,
-                  }}
-                >
-                  THE WEEK&apos;S WORST
-                </div>
+              <div className="boys-news-columns">
+                {edition.paragraphs.map(
+                  (paragraph, index) => (
+                    <p
+                      key={index}
+                      style={paragraphStyle}
+                    >
+                      {index === 0 ? (
+                        <>
+                          <span
+                            style={{
+                              float: "left",
+                              fontFamily:
+                                "Georgia, 'Times New Roman', serif",
+                              fontSize: 74,
+                              fontWeight: 900,
+                              lineHeight: 0.85,
+                              paddingRight: 8,
+                              paddingTop: 5,
+                            }}
+                          >
+                            {paragraph.charAt(0)}
+                          </span>
 
-                <h3 style={storyHeading}>
-                  BUM OF THE WEEK
-                </h3>
-
-                <p style={bodyCopy}>
-                  {edition.bum}
-                </p>
+                          {paragraph.slice(1)}
+                        </>
+                      ) : (
+                        paragraph
+                      )}
+                    </p>
+                  )
+                )}
               </div>
-            </div>
-          </section>
 
-          {/* SIGN-OFF */}
+              <div
+                style={{
+                  fontFamily:
+                    "Georgia, 'Times New Roman', serif",
+                  fontSize: "clamp(29px, 4vw, 45px)",
+                  fontWeight: 900,
+                  textAlign: "center",
+                  padding: "25px 0 10px",
+                  borderTop: `1px solid ${rule}`,
+                  marginTop: 12,
+                }}
+              >
+                {edition.closing}
+              </div>
+            </section>
 
-          <div
-            style={{
-              padding: "28px 0",
-              textAlign: "center",
-            }}
-          >
-            <div
-              style={{
-                fontFamily:
-                  "Georgia, 'Times New Roman', serif",
-                fontSize: "clamp(29px, 5vw, 48px)",
-                fontWeight: 900,
-              }}
-            >
-              {edition.closing}
-            </div>
+            {/* NEWSPAPER SIDEBAR */}
 
-            <div
-              style={{
-                ...smallCaps,
-                marginTop: 10,
-              }}
-            >
-              UNTIL NEXT WEDNESDAY
-            </div>
+            <aside className="boys-news-sidebar">
+              <HonorColumn
+                title="GOAT OF THE WEEK"
+                eyebrow="THE WEEK'S FINEST"
+                honor={goat}
+              />
+
+              <HonorColumn
+                title="BUM OF THE WEEK"
+                eyebrow="THE WEEK'S WORST"
+                honor={bum}
+              />
+
+              <PerfectTeamColumn />
+            </aside>
           </div>
 
-          {/* PRINT EDITION FOOTER */}
+          {/* PRINT FOOTER */}
 
           <div
             style={{
-              ...smallCaps,
+              ...smallPrint,
               display: "flex",
               justifyContent: "space-between",
               flexWrap: "wrap",
               gap: 12,
-              borderTop: `5px double ${rule}`,
-              paddingTop: 13,
+              paddingTop: 15,
             }}
           >
-            <span>THE BOYS TIMES • EST. 2020</span>
+            <span>THE BOYS • EST. 2020</span>
             <span>ALL RECEIPTS PRESERVED</span>
           </div>
         </article>
