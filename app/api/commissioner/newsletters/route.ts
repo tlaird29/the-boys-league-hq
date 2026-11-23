@@ -20,10 +20,18 @@ export async function POST(req:NextRequest){if(!await commissioner())return Next
  const history:Array<{at:string;reason:string;sections:Section[]}>=Array.isArray(existing?.history)?existing.history:[];
  if(action==='approve'){
   if(!existing||!current.every(s=>s.body.trim()))return NextResponse.json({error:'Fill every section before approval. You can edit the section headings and content.'},{status:400});
-  const {error}=await db().from('weekly_newsletter_drafts').update({status:'approved',approved_at:new Date().toISOString(),updated_at:new Date().toISOString()}).eq('id',existing.id);
-  if(error)throw error;return NextResponse.json({ok:true,message:'Approved and saved privately. Website publishing and email delivery are not connected yet.'});
+  // A single atomic status update makes this edition visible to public readers.
+  // Existing published editions are retained, never deleted or overwritten.
+  if(existing.status==='published')return NextResponse.json({error:'This edition is already published.'},{status:409});
+  const now=new Date().toISOString();
+  const {data:published,error}=await db().from('weekly_newsletter_drafts')
+    .update({status:'published',approved_at:now,published_at:now,updated_at:now})
+    .eq('id',existing.id).in('status',['draft','approved']).select('id').maybeSingle();
+  if(error)throw error;
+  if(!published)return NextResponse.json({error:'Publication conflict. Refresh and try again.'},{status:409});
+  return NextResponse.json({ok:true,message:`Published Week ${w.week}, ${w.year} to the homepage and archive. The previous edition remains in the archive.`});
  }
- if(existing?.status==='approved')return NextResponse.json({error:'This edition is approved. Editing is locked to prevent accidental changes.'},{status:409});
+ if(existing?.status==='approved'||existing?.status==='published')return NextResponse.json({error:'This edition is locked. Published newsletters cannot be edited.'},{status:409});
  let sections:Section[];
  let reason:string;
  if(action==='restore'){
@@ -47,7 +55,17 @@ export async function POST(req:NextRequest){if(!await commissioner())return Next
  }
  if(!validSections(sections))return NextResponse.json({error:'Invalid section content'},{status:400});
  const nextHistory=[...history,{at:new Date().toISOString(),reason,sections:current}].slice(-20);
- const {error}=await db().from('weekly_newsletter_drafts').upsert({year:w.year,week:w.week,sections,history:nextHistory,status:'draft',updated_at:new Date().toISOString()},{onConflict:'year,week'});
- if(error)throw error;return NextResponse.json({ok:true,sections,history:nextHistory});
+ if(existing){
+  const {data:saved,error}=await db().from('weekly_newsletter_drafts')
+    .update({sections,history:nextHistory,updated_at:new Date().toISOString()})
+    .eq('id',existing.id).eq('status','draft').select('id').maybeSingle();
+  if(error)throw error;
+  if(!saved)return NextResponse.json({error:'Edition changed or was published. Refresh before editing.'},{status:409});
+ }else{
+  const {error}=await db().from('weekly_newsletter_drafts')
+    .insert({year:w.year,week:w.week,sections,history:nextHistory,status:'draft',updated_at:new Date().toISOString()});
+  if(error){if(error.code==='23505')return NextResponse.json({error:'This edition was created elsewhere. Refresh.'},{status:409});throw error;}
+ }
+ return NextResponse.json({ok:true,sections,history:nextHistory});
  }catch(e){console.error('Newsletter editor failed',e);return NextResponse.json({error:'Could not save newsletter. Check Vercel logs and Supabase table.'},{status:500});}
 }
