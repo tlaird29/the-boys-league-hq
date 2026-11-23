@@ -35,10 +35,12 @@ export default function ArticleWriterPage() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [copied, setCopied] = useState(false);
 
   async function generateArticle() {
     setLoading(true);
     setError("");
+    setCopied(false);
     setArticle(null);
 
     try {
@@ -74,15 +76,20 @@ export default function ArticleWriterPage() {
   async function copyArticle() {
     if (!article) return;
 
-    const text = article.sections
-      .map(section =>
-        `${section.title}\n\n${section.body}`
-      )
+    const headline =
+      article.sections[0]?.title || "";
+
+    const body = article.sections
+      .map(section => section.body.trim())
+      .filter(Boolean)
       .join("\n\n");
+
+    const text = `${headline}\n\n${body}`;
 
     try {
       await navigator.clipboard.writeText(text);
-      window.alert("Article copied!");
+      setCopied(true);
+      setError("");
     } catch {
       setError(
         "Could not copy automatically. " +
@@ -90,6 +97,18 @@ export default function ArticleWriterPage() {
       );
     }
   }
+
+  const headline =
+    article?.sections[0]?.title || "";
+
+  const paragraphs = article
+    ? article.sections.flatMap(section =>
+        section.body
+          .split(/\n\s*\n/)
+          .map(paragraph => paragraph.trim())
+          .filter(Boolean)
+      )
+    : [];
 
   return (
     <main className="shell">
@@ -100,9 +119,9 @@ export default function ArticleWriterPage() {
       <h1>📰 AUTOMATIC ARTICLE WRITER</h1>
 
       <p className="muted">
-        Turn calculated fantasy football results
-        into a full sports-column newsletter,
-        including player impacts, game timing,
+        Generate one continuous sports-column
+        newsletter with a single headline,
+        meaningful player analysis, game timing,
         and original league trash talk.
       </p>
 
@@ -117,9 +136,9 @@ export default function ArticleWriterPage() {
         <h2>Week 12 — 2026 Test Edition</h2>
 
         <p className="muted">
-          This preview uses fictional matchup
-          data. Nothing will be published,
-          emailed, or saved to Supabase.
+          This test uses fictional matchup data.
+          Nothing is published, emailed, or
+          saved to Supabase.
         </p>
 
         <p
@@ -160,9 +179,9 @@ export default function ArticleWriterPage() {
 
         {loading && (
           <p role="status" className="muted">
-            Analyzing matchups and writing
-            the newspaper. This may take
-            several seconds.
+            Analyzing five matchups and writing
+            one continuous newspaper article.
+            This may take several seconds.
           </p>
         )}
 
@@ -218,7 +237,9 @@ export default function ArticleWriterPage() {
               type="button"
               onClick={copyArticle}
             >
-              📋 COPY COMPLETE ARTICLE
+              {copied
+                ? "✓ ARTICLE COPIED"
+                : "📋 COPY COMPLETE ARTICLE"}
             </button>
           </section>
 
@@ -229,44 +250,35 @@ export default function ArticleWriterPage() {
               maxWidth: 850,
               marginLeft: "auto",
               marginRight: "auto",
+              padding: 32,
             }}
           >
             <div className="kicker">
               THE BOYS LEAGUE HQ • WEEKLY EDITION
             </div>
 
-            {article.sections.map(
-              (section, index) => (
-                <section
-                  key={section.id}
-                  style={{
-                    padding: "24px 0",
-                    borderBottom:
-                      index === article.sections.length - 1
-                        ? "none"
-                        : "1px solid #d9e2db",
-                  }}
-                >
-                  <h2>{section.title}</h2>
+            <h2
+              style={{
+                marginTop: 20,
+                marginBottom: 28,
+                lineHeight: 1.3,
+              }}
+            >
+              {headline}
+            </h2>
 
-                  {section.body
-                    .split(/\n\s*\n/)
-                    .filter(Boolean)
-                    .map((paragraph, i) => (
-                      <p
-                        key={i}
-                        style={{
-                          lineHeight: 1.85,
-                          marginTop: 16,
-                          whiteSpace: "pre-wrap",
-                        }}
-                      >
-                        {paragraph}
-                      </p>
-                    ))}
-                </section>
-              )
-            )}
+            {paragraphs.map((paragraph, index) => (
+              <p
+                key={index}
+                style={{
+                  lineHeight: 1.9,
+                  marginBottom: 20,
+                  whiteSpace: "pre-wrap",
+                }}
+              >
+                {paragraph}
+              </p>
+            ))}
           </article>
 
           <section
@@ -280,11 +292,11 @@ export default function ArticleWriterPage() {
             <h2>Connect to Newsletter Drafts</h2>
 
             <p className="muted">
-              Once the writing quality is
-              approved, we will connect this
-              generator to the existing
-              commissioner editor and
-              Wednesday email automation.
+              After we approve the article's
+              writing quality, we will connect
+              this generator to the newsletter
+              editor and Wednesday email
+              approval workflow.
             </p>
           </section>
         </>

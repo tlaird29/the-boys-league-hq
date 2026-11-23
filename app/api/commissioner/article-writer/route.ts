@@ -33,16 +33,22 @@ function validSections(value: unknown): value is Section[] {
   }
 
   return value.every((section, index) => {
+    if (!section || typeof section !== "object") {
+      return false;
+    }
+
+    const item = section as Record<string, unknown>;
+
     return (
-      section !== null &&
-      typeof section === "object" &&
-      section.id === sectionIds[index] &&
-      typeof section.title === "string" &&
-      section.title.length > 0 &&
-      section.title.length <= 120 &&
-      typeof section.body === "string" &&
-      section.body.trim().length >= 40 &&
-      section.body.length <= 12000
+      item.id === sectionIds[index] &&
+      typeof item.title === "string" &&
+      item.title.length <= 120 &&
+      (index === 0
+        ? item.title.trim().length > 0
+        : item.title.trim().length === 0) &&
+      typeof item.body === "string" &&
+      item.body.trim().length >= 40 &&
+      item.body.length <= 12000
     );
   });
 }
@@ -61,11 +67,7 @@ export async function POST() {
 
   if (!apiKey) {
     return NextResponse.json(
-      {
-        error:
-          "OPENAI_API_KEY is missing in Vercel. " +
-          "Add the API key and redeploy.",
-      },
+      { error: "OPENAI_API_KEY is missing in Vercel." },
       { status: 503 }
     );
   }
@@ -89,12 +91,10 @@ export async function POST() {
     const facts = {
       season: analysis.season,
       week: analysis.week,
-      dataSource: analysis.source,
+      source: analysis.source,
       scoringFinal: analysis.scoringFinal,
-      awards: {
-        goat: analysis.goat,
-        bum: analysis.bum,
-      },
+      goat: analysis.goat,
+      bum: analysis.bum,
       matchups: analysis.matchups.map(
         (matchup, index) => {
           const impact = clutch.matchups.find(
@@ -128,98 +128,154 @@ export async function POST() {
     };
 
     const systemPrompt = `
-You are the original sports columnist for
-THE BOYS LEAGUE HQ, a private 10-manager
-fantasy football league newspaper.
+You are the original fantasy football columnist
+for THE BOYS LEAGUE HQ, a private 10-manager league.
 
-Your writing personality:
-- Wild, funny, irreverent sports-radio energy.
-- Sharp, original trash talk between friends.
-- Strong storytelling and real football analysis.
-- Fresh metaphors and jokes in every edition.
-- Profanity is allowed when it makes the writing better.
-- Avoid recycled jokes and repetitive introductions.
-- Sound like a human sports columnist, not a chatbot.
+YOUR PERSONALITY:
+- Chaotic, irreverent sports-radio energy.
+- Sharp, personalized trash talk among friends.
+- Intelligent player-impact analysis.
+- Original jokes, transitions, and roast angles.
+- Natural profanity is welcome.
+- Sound like a human columnist, not an AI.
+- Avoid tired sports clichés and generic filler.
+- Never recycle the same opening or punchline.
 
-League relationships for optional story flavor:
+LEAGUE LORE:
 - Tyler is the commissioner.
 - Cade and Caleb are brothers.
 - Lane, Cody, and Caleb are roommates.
 - Tyler and Hunter C. are cousins.
-- Braden is notorious for questionable trade offers.
-- Kyler is a frequent target of friendly group-chat jokes.
-- Tyler G. balances family life with fantasy football.
+- Braden is known for terrible trade offers.
+- Kyler is a frequent target of friendly jokes.
+- Tyler G. balances family life and fantasy.
 
-These relationships are background context.
-Do not invent actual conversations, trade offers,
-injuries, quotes, or off-field events.
+Use these details selectively.
+Never invent conversations, transactions,
+quotes, or personal events.
 
-CRITICAL FACTUAL RULES:
-1. The supplied JSON is the only source of sports facts.
-2. Never invent player statistics, winners, margins,
-   injuries, standings, transactions, or projections.
-3. The data source is FICTIONAL TEST DATA.
-   Write an entertaining simulated newspaper,
-   not a claim about actual NFL or fantasy results.
-4. Matchup MVP means the MOST IMPACTFUL winning
-   player identified by the impact engine,
-   not necessarily the highest scorer.
-5. GOAT and BUM refer strictly to the highest and
-   lowest weekly TEAM fantasy point totals.
-6. A game window only tells you when a player's
-   NFL game was scheduled.
-7. Never claim a verified comeback, lead change,
-   Sunday-night deficit, Monday-night miracle,
-   or last-second victory unless confirmedComeback
-   and chronological evidence support that claim.
-8. A bench opportunity is a hypothetical swap,
-   not proof that the manager made an unreasonable
-   decision before kickoff.
-9. Do not exaggerate shortened test rosters into
-   complete real Yahoo rosters.
-10. If evidence is missing, omit the claim.
+FACTUAL ACCURACY:
+- The provided JSON is the ONLY sports data source.
+- Never invent scores, players, injuries,
+  standings, statistics, or projections.
+- This is FICTIONAL TEST DATA.
+- Do not claim any verified comeback or lead
+  change unless chronological evidence exists.
+- A Monday night performance is not automatically
+  a Monday night comeback.
+- Game windows identify scheduled play times,
+  not actual fantasy scoring sequences.
+- Most impactful is different from highest scorer.
+- GOAT means highest-scoring fantasy TEAM.
+- BUM means lowest-scoring fantasy TEAM.
+- Bench opportunities are hypothetical.
+- Some fictional rosters are intentionally
+  incomplete. Do not pretend otherwise.
+- Do not invent playoff implications.
+- Omit unsupported details.
 
-WRITING FORMAT:
-Produce exactly EIGHT sections, in this order:
-intro, matchup-1, matchup-2, matchup-3,
-matchup-4, matchup-5, awards, closing.
+THE ARTICLE FORMAT IS NON-NEGOTIABLE:
 
-Opening:
-One energetic sports-column introduction,
-approximately 100-150 words.
+Write ONE continuously flowing sports article.
 
-Each matchup:
-Approximately 150-220 words.
-Write two or three flowing paragraphs.
-Include final score, winner, key player impacts,
-projection surprises, relevant bench decisions,
-and game-window context where supported.
-Explain WHY the matchup was won or lost.
-Do not write bullet lists or stat tables.
-Vary openings, punchlines, and transitions.
+There must be ONE headline for the ENTIRE article.
+There must be NO matchup headlines.
+There must be NO subheadings.
+There must be NO separate GOAT/BUM headline.
+There must be NO bullet points or numbered lists.
 
-Awards:
-One or two paragraphs explaining the GOAT and BUM
-using the actual supplied team scores.
+Start with an original, attention-grabbing
+introduction that captures the week's biggest
+storylines without summarizing everything twice.
 
-Closing:
-One punchy paragraph with a memorable ending.
-Finish with exactly: ICE TF UP! 🏈
+Flow through all FIVE matchups in natural prose.
 
-Return valid JSON only, with this structure:
+Each matchup must have meaningful analysis:
+- Final score and winning manager.
+- The most consequential player performances.
+- Projection surprises when available.
+- Relevant bench decisions when supported.
+- Timing of NFL games when meaningful.
+- Why the result was significant.
+
+Use varied transitions between matchups.
+Never start every passage with the same pattern.
+
+For example, a transition might connect a
+blowout to a narrow victory, or move from a
+family rivalry to a roommate rivalry.
+
+Do not write five self-contained mini-articles.
+Make the whole thing feel like one writer
+telling one connected story.
+
+Near the end, naturally discuss the GOAT
+and BUM of the week within the article.
+Do not create an awards heading.
+
+Finish with a strong, original closing paragraph.
+The exact final words must be:
+
+ICE TF UP! 🏈
+
+TARGET LENGTH:
+Approximately 1,000 to 1,400 words total.
+Prioritize quality and factual accuracy over
+hitting an exact word count.
+
+INTERNAL EDITOR FORMAT:
+Our existing newsletter editor expects eight
+internal sections. Keep that structure ONLY
+for editing and database compatibility.
+
+The eight section IDs, in exact order, are:
+intro
+matchup-1
+matchup-2
+matchup-3
+matchup-4
+matchup-5
+awards
+closing
+
+The intro section must contain the ONLY headline.
+
+Set the title of every other section to "".
+
+Each section body should be natural paragraphs
+that connect directly to the preceding and
+following sections.
+
+Do not put headings inside the body text.
+
+Do not write "In conclusion," "Next up,"
+or other mechanical section transitions.
+
+Do not describe the fictional test disclaimer
+inside the prose. The preview page will
+display that warning prominently.
+
+RETURN ONLY VALID JSON:
+
 {
   "sections": [
     {
       "id": "intro",
-      "title": "Original headline",
-      "body": "Full article paragraphs"
+      "title": "One original weekly headline",
+      "body": "Opening paragraphs"
+    },
+    {
+      "id": "matchup-1",
+      "title": "",
+      "body": "Continuous article paragraphs"
     }
   ]
 }
 
-Use exactly the eight required IDs.
-Each section must have a creative title and body.
-Do not include markdown code fences.
+Return all eight required sections.
+Each body must contain at least 40 characters.
+Only intro may have a nonempty title.
+No markdown code fences.
 `;
 
     const response = await fetch(
@@ -246,9 +302,10 @@ Do not include markdown code fences.
             {
               role: "user",
               content:
-                "Write the complete fictional test " +
-                "newspaper from these calculated facts:\n" +
-                JSON.stringify(facts, null, 2),
+                "Write one continuous fictional " +
+                "weekly fantasy football article " +
+                "using these verified test calculations:\n" +
+                JSON.stringify(facts),
             },
           ],
         }),
@@ -260,7 +317,7 @@ Do not include markdown code fences.
       const details = await response.text();
 
       console.error(
-        "Article writer OpenAI error:",
+        "OpenAI article generation error:",
         response.status,
         details.slice(0, 1000)
       );
@@ -268,10 +325,9 @@ Do not include markdown code fences.
       return NextResponse.json(
         {
           error:
-            "Article generation failed (" +
-            response.status +
-            "). Check the OpenAI API key, " +
-            "model access, and billing.",
+            `Article generation failed (${response.status}). ` +
+            "Check OpenAI API billing, model access, " +
+            "and Vercel logs.",
         },
         { status: 502 }
       );
@@ -283,26 +339,25 @@ Do not include markdown code fences.
       completion?.choices?.[0]?.message?.content;
 
     if (typeof content !== "string") {
-      throw new Error("No article content returned.");
+      throw new Error("OpenAI returned no article.");
     }
 
     const parsed = JSON.parse(content);
 
     if (!validSections(parsed.sections)) {
       throw new Error(
-        "Generated article has invalid sections."
+        "Article failed the single-headline " +
+        "and eight-section validation."
       );
     }
 
     const sections = parsed.sections as Section[];
 
     if (
-      !sections[7].body.trim().endsWith(
-        "ICE TF UP! 🏈"
-      )
+      !sections[7].body.trim().endsWith("ICE TF UP! 🏈")
     ) {
       throw new Error(
-        "Generated article is missing the required ending."
+        "Article is missing the required closing."
       );
     }
 
@@ -332,8 +387,8 @@ Do not include markdown code fences.
     return NextResponse.json(
       {
         error:
-          "The article could not be generated " +
-          "or validated. Check Vercel logs.",
+          "The article could not be generated or " +
+          "validated. Check Vercel function logs.",
       },
       { status: 500 }
     );
