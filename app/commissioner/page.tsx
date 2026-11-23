@@ -31,9 +31,9 @@ export default async function CommissionerPage() {
       <h1>COMMISSIONER HQ</h1>
 
       <p className="muted">
-        League history, Yahoo integration,
-        newsletter editing, email delivery,
-        season analysis, and championship automation.
+        Manage league analysis, weekly newspapers,
+        Yahoo integration, email automation,
+        and championship coverage.
       </p>
 
       <div className="grid" style={{ marginTop: 24 }}>
@@ -45,16 +45,38 @@ export default async function CommissionerPage() {
           <h2>📰 Newsletter Editor</h2>
 
           <p className="muted">
-            Edit weekly storylines, regenerate
-            matchup paragraphs, restore revisions,
-            and approve newsletter drafts.
+            Edit storylines, regenerate sections,
+            restore revisions, and approve
+            newsletters for publication.
           </p>
 
           <Link
             className="button"
             href="/commissioner/newsletters"
           >
-            Open Newsletter Editor
+            OPEN NEWSLETTER EDITOR
+          </Link>
+        </section>
+
+        <section className="card span6">
+          <div className="label">
+            PLAYER IMPACT ENGINE
+          </div>
+
+          <h2>🏈 Matchup Analysis Lab</h2>
+
+          <p className="muted">
+            Review matchup scores, player MVPs,
+            projection busts, bench opportunities,
+            positional advantages, and awards
+            using fictional test data.
+          </p>
+
+          <Link
+            className="button"
+            href="/commissioner/analysis-lab"
+          >
+            OPEN ANALYSIS LAB
           </Link>
         </section>
 
@@ -66,9 +88,8 @@ export default async function CommissionerPage() {
           <h2>✉️ Email Delivery Test</h2>
 
           <p className="muted">
-            Send a test email directly to your
-            commissioner inbox and verify
-            the Resend connection.
+            Test the Resend connection and
+            commissioner email delivery.
           </p>
 
           <Link
@@ -84,18 +105,18 @@ export default async function CommissionerPage() {
             LEAGUE INTELLIGENCE
           </div>
 
-          <h2>🏈 Season Analysis</h2>
+          <h2>📊 Season Analysis</h2>
 
           <p className="muted">
-            Manually review Yahoo scoring,
-            GOAT/BUM and rivalry statistics.
+            Review league scoring,
+            historical statistics, and rivalries.
           </p>
 
           <Link
             className="button"
             href="/commissioner/season-analysis"
           >
-            Open Season Analysis
+            OPEN SEASON ANALYSIS
           </Link>
         </section>
 
@@ -107,16 +128,15 @@ export default async function CommissionerPage() {
           <h2>🎙️ Season Finale Queue</h2>
 
           <p className="muted">
-            See automatically prepared data drafts
-            after championship results are confirmed.
-            Nothing publishes without approval.
+            Review prepared championship
+            analysis and finale drafts.
           </p>
 
           <Link
             className="button"
             href="/commissioner/season-finales"
           >
-            View Finale Queue
+            VIEW FINALE QUEUE
           </Link>
         </section>
 
@@ -128,15 +148,15 @@ export default async function CommissionerPage() {
           <h2>🔗 League Connection</h2>
 
           <p className="muted">
-            Authorize read-only access to your
-            Yahoo fantasy league.
+            Authorize read-only access to
+            your Yahoo fantasy league.
           </p>
 
           <Link
             className="button"
             href="/api/yahoo/connect"
           >
-            Connect Yahoo Fantasy
+            CONNECT YAHOO FANTASY
           </Link>
         </section>
       </div>
@@ -150,7 +170,7 @@ export default async function CommissionerPage() {
         }}
       >
         <Link href="/" className="button">
-          Back to Dashboard
+          BACK TO DASHBOARD
         </Link>
 
         <SignOutButton />
