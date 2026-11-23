@@ -60,6 +60,28 @@ export default async function CommissionerPage() {
 
         <section className="card span6">
           <div className="label">
+            AUTOMATIC SPORTS JOURNALISM
+          </div>
+
+          <h2>✍️ Article Writer</h2>
+
+          <p className="muted">
+            Generate complete sports-column
+            newsletters using player impacts,
+            matchup analysis, game timing,
+            and original league trash talk.
+          </p>
+
+          <Link
+            className="button"
+            href="/commissioner/article-writer"
+          >
+            OPEN ARTICLE WRITER
+          </Link>
+        </section>
+
+        <section className="card span6">
+          <div className="label">
             PLAYER IMPACT ENGINE
           </div>
 
