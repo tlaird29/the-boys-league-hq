@@ -3,6 +3,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import type { CSSProperties } from "react";
 
 type Player = {
   id: string;
@@ -14,13 +15,22 @@ type Player = {
 
 type Evaluation = {
   id: number;
-  a: string;
-  b: string;
-  difference: number;
-  status: string;
+  sideA: string;
+  sideB: string;
+  rawA: number;
+  rawB: number;
+  adjustedA: number;
+  adjustedB: number;
+  separation: number;
+  allowed: boolean;
   date: string;
 };
 
+const MAX_SEPARATION = 25;
+const EXTRA_PLAYER_DISCOUNT = 0.20;
+
+// Demonstration values only.
+// Live player values will replace these in a later update.
 const players: Player[] = [
   { id: "gibbs", name: "Jahmyr Gibbs", pos: "RB", team: "DET", value: 92.7 },
   { id: "bijan", name: "Bijan Robinson", pos: "RB", team: "ATL", value: 89.4 },
@@ -34,220 +44,395 @@ const players: Player[] = [
   { id: "mahomes", name: "Patrick Mahomes", pos: "QB", team: "KC", value: 31.5 }
 ];
 
-const panel: React.CSSProperties = {
+const paper: CSSProperties = {
   background: "#fffdf6",
-  border: "1px solid #c6bca8",
+  border: "1px solid #c8bda8",
   padding: 20
 };
 
-const button: React.CSSProperties = {
-  background: "#202b25",
-  color: "#fffdf6",
-  padding: "10px 14px",
+const darkButton: CSSProperties = {
   border: 0,
-  cursor: "pointer",
-  fontWeight: 700
+  background: "#222a23",
+  color: "#fffdf6",
+  padding: "12px 18px",
+  fontWeight: 800,
+  cursor: "pointer"
 };
 
-const selectStyle: React.CSSProperties = {
+const field: CSSProperties = {
   width: "100%",
-  padding: 10,
-  border: "1px solid #a99f8c",
-  background: "white"
+  padding: 11,
+  border: "1px solid #aa9f8b",
+  borderRadius: 0,
+  background: "#fff"
 };
 
-export default function TradeHub() {
+const format = (value: number) => value.toFixed(1);
+
+// Package adjustment:
+// The side sending MORE players receives a discount.
+// The highest-value player retains full value.
+// Each additional player on that side receives 80% value.
+//
+// This is an independent approximation, not RotoTrade's
+// proprietary package-adjustment formula.
+function calculateSide(
+  selected: Player[],
+  opposingPlayerCount: number
+) {
+  const ordered = [...selected].sort(
+    (a, b) => b.value - a.value
+  );
+
+  const raw = ordered.reduce(
+    (sum, player) => sum + player.value,
+    0
+  );
+
+  if (ordered.length <= opposingPlayerCount) {
+    return {
+      raw,
+      adjusted: raw,
+      adjustment: 0
+    };
+  }
+
+  const fullValue = ordered[0]?.value ?? 0;
+
+  const additionalValue = ordered
+    .slice(1)
+    .reduce((sum, player) => sum + player.value, 0);
+
+  const adjusted =
+    fullValue +
+    additionalValue * (1 - EXTRA_PLAYER_DISCOUNT);
+
+  return {
+    raw,
+    adjusted,
+    adjustment: raw - adjusted
+  };
+}
+
+export default function TradeHubPage() {
   const [sideA, setSideA] = useState<string[]>([]);
   const [sideB, setSideB] = useState<string[]>([]);
   const [search, setSearch] = useState("");
+  const [position, setPosition] = useState("ALL");
   const [evaluated, setEvaluated] = useState(false);
   const [history, setHistory] = useState<Evaluation[]>([]);
 
-  const byId = (id: string) => players.find(p => p.id === id);
+  const playerById = (id: string) =>
+    players.find(player => player.id === id);
 
-  const total = (ids: string[]) =>
-    ids.reduce((sum, id) => sum + (byId(id)?.value ?? 0), 0);
+  const selectedA = sideA
+    .map(playerById)
+    .filter((player): player is Player => Boolean(player));
 
-  const aTotal = total(sideA);
-  const bTotal = total(sideB);
-  const difference = Math.abs(aTotal - bTotal);
-  const passes = difference <= 25;
+  const selectedB = sideB
+    .map(playerById)
+    .filter((player): player is Player => Boolean(player));
 
-  const eligible = useMemo(
-    () =>
-      players.filter(p =>
-        p.name.toLowerCase().includes(search.toLowerCase())
-      ),
-    [search]
+  const resultA = calculateSide(
+    selectedA,
+    selectedB.length
   );
 
-  function add(id: string, side: "a" | "b") {
-    if (!id || sideA.includes(id) || sideB.includes(id)) return;
+  const resultB = calculateSide(
+    selectedB,
+    selectedA.length
+  );
 
-    if (side === "a") setSideA(prev => [...prev, id]);
-    else setSideB(prev => [...prev, id]);
+  const separation = Math.abs(
+    resultA.adjusted - resultB.adjusted
+  );
+
+  const allowed = separation <= MAX_SEPARATION;
+
+  const hasBothSides =
+    selectedA.length > 0 && selectedB.length > 0;
+
+  const packageAdjustmentApplied =
+    selectedA.length !== selectedB.length;
+
+  const availablePlayers = useMemo(() => {
+    return players.filter(player => {
+      const matchesSearch = player.name
+        .toLowerCase()
+        .includes(search.toLowerCase());
+
+      const matchesPosition =
+        position === "ALL" || player.pos === position;
+
+      return matchesSearch && matchesPosition;
+    });
+  }, [search, position]);
+
+  function addPlayer(
+    id: string,
+    side: "A" | "B"
+  ) {
+    if (!id || sideA.includes(id) || sideB.includes(id)) {
+      return;
+    }
+
+    if (side === "A") {
+      setSideA(current => [...current, id]);
+    } else {
+      setSideB(current => [...current, id]);
+    }
 
     setEvaluated(false);
   }
 
-  function remove(id: string, side: "a" | "b") {
-    if (side === "a") setSideA(prev => prev.filter(x => x !== id));
-    else setSideB(prev => prev.filter(x => x !== id));
+  function removePlayer(
+    id: string,
+    side: "A" | "B"
+  ) {
+    if (side === "A") {
+      setSideA(current =>
+        current.filter(playerId => playerId !== id)
+      );
+    } else {
+      setSideB(current =>
+        current.filter(playerId => playerId !== id)
+      );
+    }
 
     setEvaluated(false);
   }
 
-  function renderSide(title: string, ids: string[], side: "a" | "b") {
+  function clearTrade() {
+    setSideA([]);
+    setSideB([]);
+    setSearch("");
+    setPosition("ALL");
+    setEvaluated(false);
+  }
+
+  function saveEvaluation() {
+    if (!evaluated || !hasBothSides) return;
+
+    const names = (selected: Player[]) =>
+      selected.map(player => player.name).join(", ");
+
+    const entry: Evaluation = {
+      id: Date.now(),
+      sideA: names(selectedA),
+      sideB: names(selectedB),
+      rawA: resultA.raw,
+      rawB: resultB.raw,
+      adjustedA: resultA.adjusted,
+      adjustedB: resultB.adjusted,
+      separation,
+      allowed,
+      date: new Date().toLocaleString()
+    };
+
+    setHistory(current => [entry, ...current]);
+  }
+
+  function renderSide(
+    title: string,
+    selected: Player[],
+    side: "A" | "B",
+    calculation: ReturnType<typeof calculateSide>
+  ) {
     return (
-      <section style={panel}>
-        <h2 style={{ fontSize: 25, marginBottom: 16 }}>{title}</h2>
+      <section style={paper}>
+        <h2
+          style={{
+            fontFamily: "Georgia, serif",
+            fontSize: 25,
+            marginBottom: 16
+          }}
+        >
+          {title}
+        </h2>
 
-        {ids.length === 0 && (
-          <p style={{ color: "#716d63" }}>
-            Select a player to get started.
+        {selected.length === 0 && (
+          <p style={{ color: "#777064" }}>
+            No players selected.
           </p>
         )}
 
-        {ids.map(id => {
-          const p = byId(id);
-
-          return p && (
-            <div
-              key={id}
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                gap: 8,
-                padding: "9px 0",
-                borderBottom: "1px solid #ddd4c2"
-              }}
-            >
-              <span>
-                <strong>{p.name}</strong>
-                <br />
-                <small>
-                  {p.pos} · {p.team} · {p.value.toFixed(1)}
-                </small>
-              </span>
-
-              <button
-                onClick={() => remove(id, side)}
-                aria-label={`Remove ${p.name}`}
+        {selected.map(player => (
+          <div
+            key={player.id}
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: 10,
+              padding: "11px 0",
+              borderBottom: "1px solid #e2d9c8"
+            }}
+          >
+            <div>
+              <strong>{player.name}</strong>
+              <div
                 style={{
-                  border: 0,
-                  background: "transparent",
-                  cursor: "pointer",
-                  fontSize: 20
+                  fontSize: 12,
+                  color: "#777064",
+                  marginTop: 3
                 }}
               >
-                ×
-              </button>
+                {player.pos} · {player.team} ·{" "}
+                {format(player.value)} pts
+              </div>
             </div>
-          );
-        })}
+
+            <button
+              type="button"
+              aria-label={`Remove ${player.name}`}
+              onClick={() =>
+                removePlayer(player.id, side)
+              }
+              style={{
+                border: "1px solid #c8bda8",
+                background: "transparent",
+                padding: "5px 10px",
+                cursor: "pointer"
+              }}
+            >
+              ×
+            </button>
+          </div>
+        ))}
 
         <label
           style={{
             display: "block",
-            marginTop: 16,
-            marginBottom: 6,
-            fontWeight: 700
+            fontWeight: 700,
+            marginTop: 18,
+            marginBottom: 8
           }}
         >
-          Add player
+          Add Player
         </label>
 
         <select
-          aria-label={`Add player to ${title}`}
-          style={selectStyle}
           value=""
-          onChange={e => add(e.target.value, side)}
+          aria-label={`Add player to ${title}`}
+          style={field}
+          onChange={event =>
+            addPlayer(event.target.value, side)
+          }
         >
-          <option value="">Choose a player...</option>
+          <option value="">Select NFL player...</option>
 
-          {eligible
+          {availablePlayers
             .filter(
-              p => !sideA.includes(p.id) && !sideB.includes(p.id)
+              player =>
+                !sideA.includes(player.id) &&
+                !sideB.includes(player.id)
             )
-            .map(p => (
-              <option key={p.id} value={p.id}>
-                {p.name} — {p.pos} — {p.value.toFixed(1)}
+            .map(player => (
+              <option
+                key={player.id}
+                value={player.id}
+              >
+                {player.name} · {player.pos} ·{" "}
+                {format(player.value)}
               </option>
             ))}
         </select>
 
-        <p
+        <div
           style={{
-            borderTop: "2px solid #202b25",
-            paddingTop: 12,
-            marginTop: 18,
-            fontWeight: 800
+            borderTop: "3px double #222a23",
+            marginTop: 22,
+            paddingTop: 14
           }}
         >
-          TOTAL: {total(ids).toFixed(1)}
-        </p>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              marginBottom: 8
+            }}
+          >
+            <span>Raw Player Value</span>
+            <strong>{format(calculation.raw)}</strong>
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              marginBottom: 8
+            }}
+          >
+            <span>Package Adjustment</span>
+            <strong>
+              -{format(calculation.adjustment)}
+            </strong>
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              borderTop: "1px solid #d6cbb9",
+              paddingTop: 12
+            }}
+          >
+            <strong>Adjusted Trade Value</strong>
+            <strong style={{ fontSize: 26 }}>
+              {format(calculation.adjusted)}
+            </strong>
+          </div>
+        </div>
       </section>
     );
   }
 
-  function save() {
-    if (!evaluated) return;
-
-    const names = (ids: string[]) =>
-      ids.map(id => byId(id)?.name ?? id).join(", ");
-
-    setHistory(prev => [
-      {
-        id: Date.now(),
-        a: names(sideA),
-        b: names(sideB),
-        difference,
-        status: passes ? "ALLOWED" : "VETOED",
-        date: new Date().toLocaleString()
-      },
-      ...prev
-    ]);
-  }
+  const resultColor = allowed ? "#18733a" : "#ad2828";
 
   return (
     <main
       style={{
-        maxWidth: 1100,
+        maxWidth: 1120,
         margin: "0 auto",
         padding: "24px 18px 80px",
-        color: "#202b25"
+        color: "#222a23"
       }}
     >
-      <div
+      <header
         style={{
           textAlign: "center",
-          borderBottom: "4px double #202b25",
-          paddingBottom: 20
+          borderBottom: "5px double #222a23",
+          paddingBottom: 22
         }}
       >
         <Link
           href="/"
-          style={{ fontSize: 13, textDecoration: "underline" }}
+          style={{
+            fontSize: 13,
+            textDecoration: "underline"
+          }}
         >
           ← BACK TO THE BOYS
         </Link>
 
         <p
           style={{
-            letterSpacing: 3,
             fontSize: 12,
-            marginTop: 20
+            letterSpacing: 3,
+            marginTop: 22
           }}
         >
-          THE BOYS LEAGUE HQ · COMMISSIONER&apos;S EDITION
+          THE BOYS LEAGUE HQ
         </p>
 
         <h1
           style={{
             fontFamily: "Georgia, serif",
-            fontSize: "clamp(38px, 7vw, 70px)",
+            fontSize: "clamp(40px, 7vw, 76px)",
+            lineHeight: 1.1,
             letterSpacing: -2,
-            lineHeight: 1.1
+            margin: "12px 0"
           }}
         >
           THE TRADE HUB
@@ -260,201 +445,365 @@ export default function TradeHub() {
             fontSize: 17
           }}
         >
-          Where friendships go to die and terrible offers get exposed.
+          Where friendships go to die and terrible
+          trade offers get exposed.
         </p>
-      </div>
+      </header>
 
       <div
         style={{
           background: "#fff0c9",
-          border: "1px solid #aa8740",
-          padding: 15,
+          border: "1px solid #b39550",
+          padding: 16,
           margin: "22px 0",
           lineHeight: 1.6
         }}
       >
-        <strong>EARLY ACCESS — DEMONSTRATION DATA</strong>
-        <br />
-        This calculator currently uses a limited sample of player
-        values, not live updates. Package adjustment is not yet
-        applied, so results are provisional and must not be used
-        as official league approvals or vetoes.
+        <strong>EARLY ACCESS — PROVISIONAL VALUES</strong>
+        <div>
+          Player values are demonstration data.
+          Package adjustment is now automatically
+          calculated using our own 20% discount model.
+          These results are not yet calibrated against
+          RotoTrade and must not be treated as official
+          league approvals or vetoes.
+        </div>
       </div>
 
       <div
         style={{
           display: "flex",
+          justifyContent: "space-between",
           gap: 12,
           flexWrap: "wrap",
-          justifyContent: "space-between",
-          marginBottom: 18
+          marginBottom: 22,
+          fontWeight: 800,
+          fontSize: 13
         }}
       >
-        <strong>
-          10 TEAM · REDRAFT · FULL PPR · 6-POINT PASS TD
-        </strong>
+        <span>
+          10 TEAMS · REDRAFT · FULL PPR ·
+          6-POINT PASS TD
+        </span>
 
-        <strong>LEAGUE LIMIT: 25.0 POINTS</strong>
+        <span>
+          PACKAGE ADJUSTMENT: ON
+        </span>
+
+        <span>
+          MAX SEPARATION: 25.0
+        </span>
       </div>
 
-      <label
+      <section
         style={{
-          display: "block",
-          marginBottom: 8,
-          fontWeight: 700
+          ...paper,
+          marginBottom: 20
         }}
       >
-        Search available sample players
-      </label>
+        <h2
+          style={{
+            fontFamily: "Georgia, serif",
+            fontSize: 22,
+            marginBottom: 14
+          }}
+        >
+          Find Players
+        </h2>
 
-      <input
-        value={search}
-        onChange={e => setSearch(e.target.value)}
-        placeholder="Search by player name..."
-        style={{ ...selectStyle, marginBottom: 18 }}
-      />
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns:
+              "repeat(auto-fit, minmax(220px, 1fr))",
+            gap: 12
+          }}
+        >
+          <input
+            value={search}
+            onChange={event =>
+              setSearch(event.target.value)
+            }
+            placeholder="Search NFL player..."
+            aria-label="Search NFL player"
+            style={field}
+          />
+
+          <select
+            value={position}
+            onChange={event =>
+              setPosition(event.target.value)
+            }
+            aria-label="Filter by position"
+            style={field}
+          >
+            <option value="ALL">All Positions</option>
+            <option value="QB">Quarterbacks</option>
+            <option value="RB">Running Backs</option>
+            <option value="WR">Wide Receivers</option>
+            <option value="TE">Tight Ends</option>
+          </select>
+        </div>
+      </section>
 
       <div
         style={{
           display: "grid",
           gridTemplateColumns:
-            "repeat(auto-fit, minmax(270px, 1fr))",
+            "repeat(auto-fit, minmax(280px, 1fr))",
           gap: 18
         }}
       >
-        {renderSide("TEAM A SENDS", sideA, "a")}
-        {renderSide("TEAM B SENDS", sideB, "b")}
+        {renderSide(
+          "TEAM A SENDS",
+          selectedA,
+          "A",
+          resultA
+        )}
+
+        {renderSide(
+          "TEAM B SENDS",
+          selectedB,
+          "B",
+          resultB
+        )}
       </div>
 
       <div
         style={{
-          textAlign: "center",
-          padding: "24px 0"
+          display: "flex",
+          justifyContent: "center",
+          flexWrap: "wrap",
+          gap: 12,
+          margin: "24px 0"
         }}
       >
         <button
-          style={{
-            ...button,
-            opacity: sideA.length && sideB.length ? 1 : 0.5
-          }}
-          disabled={!sideA.length || !sideB.length}
+          type="button"
+          disabled={!hasBothSides}
           onClick={() => setEvaluated(true)}
+          style={{
+            ...darkButton,
+            opacity: hasBothSides ? 1 : 0.5
+          }}
         >
-          EVALUATE PROPOSED TRADE
+          EVALUATE TRADE
+        </button>
+
+        <button
+          type="button"
+          onClick={clearTrade}
+          style={{
+            ...darkButton,
+            background: "#e8e0d1",
+            color: "#222a23"
+          }}
+        >
+          CLEAR TRADE
         </button>
       </div>
 
-      {evaluated && (
+      {evaluated && hasBothSides && (
         <section
           style={{
-            ...panel,
+            ...paper,
             textAlign: "center",
-            border: `2px solid ${
-              passes ? "#17803e" : "#b32828"
-            }`
+            border: `2px solid ${resultColor}`,
+            padding: 28
           }}
         >
           <p
             style={{
-              fontWeight: 800,
-              color: passes ? "#17803e" : "#b32828"
+              color: resultColor,
+              fontSize: 18,
+              fontWeight: 900,
+              letterSpacing: 1
             }}
           >
-            PROVISIONAL {passes ? "ALLOWED" : "VETOED"}
+            PROVISIONAL{" "}
+            {allowed ? "TRADE ALLOWED" : "TRADE VETOED"}
           </p>
 
-          <p style={{ fontSize: 12, letterSpacing: 2 }}>
+          <p
+            style={{
+              letterSpacing: 2,
+              fontSize: 12,
+              fontWeight: 800,
+              marginTop: 16
+            }}
+          >
             TRADE VALUE SEPARATION
           </p>
 
           <div
             style={{
-              fontSize: 64,
+              fontSize: "clamp(55px, 9vw, 90px)",
               fontWeight: 900,
-              color: passes ? "#17803e" : "#b32828"
+              lineHeight: 1.2,
+              color: resultColor
             }}
           >
-            {difference.toFixed(1)}
+            {format(separation)}
           </div>
 
           <p>
-            Maximum permitted separation: 25.0
-            <br />
-            Package adjustment not included
+            Maximum allowed:{" "}
+            <strong>{format(MAX_SEPARATION)}</strong>
           </p>
 
-          <button style={button} onClick={save}>
-            SAVE TO THIS SESSION&apos;S EVALUATIONS
+          <p
+            style={{
+              fontSize: 13,
+              color: "#6f695e"
+            }}
+          >
+            Package Adjustment:{" "}
+            <strong>
+              {packageAdjustmentApplied
+                ? "APPLIED AUTOMATICALLY"
+                : "ON — NO ADJUSTMENT NEEDED"}
+            </strong>
+          </p>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns:
+                "repeat(auto-fit, minmax(180px, 1fr))",
+              gap: 12,
+              margin: "22px 0"
+            }}
+          >
+            <div
+              style={{
+                background: "#f4eee3",
+                padding: 14
+              }}
+            >
+              <div>TEAM A ADJUSTED</div>
+              <strong style={{ fontSize: 25 }}>
+                {format(resultA.adjusted)}
+              </strong>
+            </div>
+
+            <div
+              style={{
+                background: "#f4eee3",
+                padding: 14
+              }}
+            >
+              <div>TEAM B ADJUSTED</div>
+              <strong style={{ fontSize: 25 }}>
+                {format(resultB.adjusted)}
+              </strong>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={saveEvaluation}
+            style={darkButton}
+          >
+            SAVE EVALUATION
           </button>
         </section>
       )}
 
       <section
         style={{
-          marginTop: 38,
-          borderTop: "4px double #202b25",
-          paddingTop: 18
+          marginTop: 42,
+          borderTop: "5px double #222a23",
+          paddingTop: 22
         }}
       >
         <h2
           style={{
             fontFamily: "Georgia, serif",
-            fontSize: 30
+            fontSize: 32
           }}
         >
           TRADE HISTORY
         </h2>
 
-        <p style={{ color: "#6c675d" }}>
-          Official approved Yahoo trades will appear here after
-          integration. Below are temporary evaluations saved in
-          this browser session only.
+        <p
+          style={{
+            color: "#716a5d",
+            lineHeight: 1.6
+          }}
+        >
+          This section currently stores temporary
+          evaluations for the current page session.
+          Official approved trades will be imported
+          and stored separately once we connect
+          the permanent database.
         </p>
 
         {history.length === 0 ? (
           <div
             style={{
-              ...panel,
+              ...paper,
               textAlign: "center",
-              marginTop: 14
+              marginTop: 16
             }}
           >
             No evaluations saved yet.
           </div>
         ) : (
-          history.map(t => (
+          history.map(entry => (
             <article
-              key={t.id}
-              style={{ ...panel, marginTop: 12 }}
+              key={entry.id}
+              style={{
+                ...paper,
+                marginTop: 12
+              }}
             >
               <div
                 style={{
                   display: "flex",
                   justifyContent: "space-between",
-                  gap: 10,
+                  gap: 14,
                   flexWrap: "wrap"
                 }}
               >
-                <strong>
-                  {t.a} <span style={{ fontWeight: 400 }}>for</span>{" "}
-                  {t.b}
-                </strong>
+                <div>
+                  <strong>
+                    {entry.sideA}
+                  </strong>
+                  <span> for </span>
+                  <strong>
+                    {entry.sideB}
+                  </strong>
+                </div>
 
                 <strong
                   style={{
-                    color:
-                      t.status === "ALLOWED"
-                        ? "#17803e"
-                        : "#b32828"
+                    color: entry.allowed
+                      ? "#18733a"
+                      : "#ad2828"
                   }}
                 >
-                  {t.difference.toFixed(1)} · {t.status}
+                  {format(entry.separation)} ·{" "}
+                  {entry.allowed ? "ALLOWED" : "VETOED"}
                 </strong>
               </div>
 
-              <small>
-                {t.date} · Provisional calculation, not an
-                official decision
+              <p
+                style={{
+                  fontSize: 13,
+                  marginTop: 10
+                }}
+              >
+                Adjusted totals:{" "}
+                {format(entry.adjustedA)} vs.{" "}
+                {format(entry.adjustedB)}
+              </p>
+
+              <small
+                style={{
+                  color: "#716a5d"
+                }}
+              >
+                {entry.date} · Provisional evaluation
               </small>
             </article>
           ))
