@@ -9,6 +9,7 @@ const nav = [
   ["Season Awards", "/awards"],
   ["Rivalries", "/rivalries"],
   ["Season Archives", "/seasons"],
+  ["Trade Hub", "/trade-hub"],
   ["Commissioner", "/commissioner"],
 ];
 
