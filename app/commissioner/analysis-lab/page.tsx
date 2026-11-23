@@ -6,10 +6,28 @@ import { useEffect, useState } from "react";
 import type {
   WeeklyAnalysis,
 } from "../../../lib/matchup-analysis";
+import type {
+  ClutchWeekAnalysis,
+} from "../../../lib/clutch-impact";
+
+type TestResult = {
+  success: boolean;
+  analysis: WeeklyAnalysis;
+  clutch: ClutchWeekAnalysis;
+};
+
+const windowLabels: Record<string, string> = {
+  THURSDAY: "Thursday Night Football",
+  SUNDAY_EARLY: "Sunday Early",
+  SUNDAY_LATE: "Sunday Afternoon",
+  SUNDAY_NIGHT: "Sunday Night Football",
+  MONDAY_NIGHT: "Monday Night Football",
+  UNKNOWN: "Game Time Unknown",
+};
 
 export default function AnalysisLabPage() {
   const [data, setData] =
-    useState<WeeklyAnalysis | null>(null);
+    useState<TestResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -31,7 +49,7 @@ export default function AnalysisLabPage() {
         );
       }
 
-      setData(result.analysis);
+      setData(result);
     } catch (err) {
       setError(
         err instanceof Error
@@ -56,19 +74,17 @@ export default function AnalysisLabPage() {
       <h1>🏈 MATCHUP ANALYSIS LAB</h1>
 
       <p className="muted">
-        Preview the player-impact calculations
-        that will eventually power your
-        automatic weekly sports articles.
+        Player impact, projection surprises,
+        lineup decisions, and game-time context.
       </p>
 
       <p
         style={{
           color: "#a25a00",
           fontWeight: 800,
-          marginTop: 12,
         }}
       >
-        FICTIONAL TEST DATA — NOT LIVE YAHOO RESULTS
+        FICTIONAL TEST DATA — NOT LIVE RESULTS
       </p>
 
       <div
@@ -90,8 +106,8 @@ export default function AnalysisLabPage() {
         </button>
 
         <Link
-          href="/commissioner"
           className="button"
+          href="/commissioner"
         >
           ← COMMISSIONER HQ
         </Link>
@@ -107,20 +123,21 @@ export default function AnalysisLabPage() {
         <>
           <section className="card">
             <div className="label">
-              WEEKLY ANALYSIS
+              WEEKLY INTELLIGENCE
             </div>
 
             <h2>
-              Week {data.week} — {data.season}
+              Week {data.analysis.week} —{" "}
+              {data.analysis.season}
             </h2>
 
             <p className="muted">
-              {data.matchups.length} matchups analyzed
+              {data.analysis.matchups.length} matchups
               {" • "}
-              Source: {data.source.toUpperCase()}
+              {data.analysis.source.toUpperCase()}
               {" • "}
-              {data.scoringFinal
-                ? "Final scoring"
+              {data.analysis.scoringFinal
+                ? "Final scores"
                 : "Scoring in progress"}
             </p>
           </section>
@@ -135,13 +152,13 @@ export default function AnalysisLabPage() {
               </div>
 
               <h2>
-                {data.goat?.manager ?? "Not available"}
+                {data.analysis.goat?.manager ??
+                  "Unavailable"}
               </h2>
 
               <p>
-                {data.goat
-                  ? `${data.goat.points} fantasy points`
-                  : "Waiting for final scores"}
+                {data.analysis.goat?.points ?? "—"}
+                {" "}fantasy points
               </p>
             </section>
 
@@ -151,19 +168,19 @@ export default function AnalysisLabPage() {
               </div>
 
               <h2>
-                {data.bum?.manager ?? "Not available"}
+                {data.analysis.bum?.manager ??
+                  "Unavailable"}
               </h2>
 
               <p>
-                {data.bum
-                  ? `${data.bum.points} fantasy points`
-                  : "Waiting for final scores"}
+                {data.analysis.bum?.points ?? "—"}
+                {" "}fantasy points
               </p>
             </section>
           </div>
 
           <h2 style={{ marginTop: 28 }}>
-            MATCHUP BREAKDOWNS
+            MATCHUP IMPACT REPORTS
           </h2>
 
           <div
@@ -173,136 +190,183 @@ export default function AnalysisLabPage() {
               marginTop: 16,
             }}
           >
-            {data.matchups.map((matchup, index) => (
-              <section
-                key={matchup.id}
-                className="card"
-              >
-                <div className="label">
-                  MATCHUP {index + 1}
-                </div>
+            {data.analysis.matchups.map(
+              (matchup, index) => {
+                const clutch =
+                  data.clutch.matchups.find(
+                    item =>
+                      item.matchupId === matchup.id
+                  );
 
-                <h2 style={{ marginTop: 10 }}>
-                  {matchup.home} vs. {matchup.away}
-                </h2>
+                const mvp = clutch?.mostImpactful;
+                const scorer = clutch?.topScorer;
 
-                <div
-                  style={{
-                    display: "flex",
-                    gap: 24,
-                    flexWrap: "wrap",
-                    margin: "16px 0",
-                  }}
-                >
-                  <div>
-                    <strong>{matchup.home}</strong>
-                    <h2>{matchup.homeScore}</h2>
-                  </div>
+                return (
+                  <section
+                    key={matchup.id}
+                    className="card"
+                  >
+                    <div className="label">
+                      MATCHUP {index + 1}
+                    </div>
 
-                  <div>
-                    <strong>{matchup.away}</strong>
-                    <h2>{matchup.awayScore}</h2>
-                  </div>
-                </div>
+                    <h2>
+                      {matchup.home} vs. {matchup.away}
+                    </h2>
 
-                <p>
-                  <strong>Winner:</strong>{" "}
-                  {matchup.winner ?? "Tie"}
-                </p>
+                    <h3>
+                      {matchup.homeScore} –{" "}
+                      {matchup.awayScore}
+                    </h3>
 
-                <p>
-                  <strong>Winning margin:</strong>{" "}
-                  {matchup.margin} points
-                </p>
+                    <p>
+                      <strong>Winner:</strong>{" "}
+                      {matchup.winner ?? "Tie"}
+                      {" • "}
+                      <strong>Margin:</strong>{" "}
+                      {matchup.margin}
+                    </p>
 
-                <hr />
+                    <hr />
 
-                <h3>⭐ Matchup MVP</h3>
+                    <h3>⭐ Most Impactful Player</h3>
 
-                <p>
-                  {matchup.mvp
-                    ? `${matchup.mvp.player} (${matchup.mvp.manager}) — ${matchup.mvp.points} points`
-                    : "No starter data available"}
-                </p>
-
-                <h3>📉 Biggest Projection Bust</h3>
-
-                <p>
-                  {matchup.biggestBust &&
-                  (matchup.biggestBust.difference ?? 0) < 0
-                    ? `${matchup.biggestBust.player} — ${matchup.biggestBust.points} points (${matchup.biggestBust.difference} vs. projection)`
-                    : "No below-projection starters"}
-                </p>
-
-                <h3>🔥 Top Overperformers</h3>
-
-                {matchup.overperformers.length ? (
-                  <ul>
-                    {matchup.overperformers.map(
-                      (player, i) => (
-                        <li key={i}>
-                          {player.player}:{" "}
-                          {player.points} points
-                          {" "}({player.difference !== null &&
-                            player.difference > 0
-                              ? "+"
-                              : ""}
-                          {player.difference} vs. projection)
-                        </li>
-                      )
-                    )}
-                  </ul>
-                ) : (
-                  <p className="muted">
-                    No overperformers identified.
-                  </p>
-                )}
-
-                <h3>🪑 Bench Opportunities</h3>
-
-                {matchup.benchOpportunities.length ? (
-                  <ul>
-                    {matchup.benchOpportunities
-                      .slice(0, 3)
-                      .map((opportunity, i) => (
-                        <li key={i}>
+                    {mvp ? (
+                      <>
+                        <p>
                           <strong>
-                            {opportunity.manager}:
-                          </strong>{" "}
-                          {opportunity.benchPlayer}
-                          {" "}over{" "}
-                          {opportunity.starter}
-                          {" "}could gain{" "}
-                          {opportunity.potentialGain}
-                          {" "}points.
-                          {opportunity.wouldChangeResult
-                            ? " This would reverse the result."
-                            : ""}
-                        </li>
-                      ))}
-                  </ul>
-                ) : (
-                  <p className="muted">
-                    No positive bench substitutions found.
-                  </p>
-                )}
+                            {mvp.player}
+                          </strong>
+                          {" "}({mvp.manager})
+                          {" — "}
+                          {mvp.points} points
+                        </p>
 
-                <h3>📊 Biggest Positional Advantages</h3>
+                        <p>
+                          <strong>Impact rating:</strong>{" "}
+                          {mvp.impactScore}
+                        </p>
 
-                <ul>
-                  {matchup.positionalAdvantages
-                    .filter(item => item.advantage > 0)
-                    .slice(0, 3)
-                    .map(item => (
-                      <li key={item.position}>
-                        {item.position}:{" "}
-                        {item.leader} +{item.advantage}
-                        {" "}points
-                      </li>
+                        <p>
+                          <strong>Game window:</strong>{" "}
+                          {windowLabels[mvp.gameWindow]}
+                        </p>
+
+                        <ul>
+                          {mvp.reasons.map(
+                            (reason, i) => (
+                              <li key={i}>
+                                {reason}
+                              </li>
+                            )
+                          )}
+                        </ul>
+                      </>
+                    ) : (
+                      <p className="muted">
+                        No winning-team MVP available.
+                      </p>
+                    )}
+
+                    <h3>🔥 Highest Scoring Player</h3>
+
+                    <p>
+                      {scorer
+                        ? `${scorer.player} — ${scorer.points} points`
+                        : "Unavailable"}
+                    </p>
+
+                    <h3>📉 Biggest Projection Bust</h3>
+
+                    <p>
+                      {matchup.biggestBust &&
+                      (matchup.biggestBust.difference ?? 0) < 0
+                        ? `${matchup.biggestBust.player}: ${matchup.biggestBust.difference} vs. projection`
+                        : "No below-projection starter identified"}
+                    </p>
+
+                    <h3>🪑 Bench Opportunities</h3>
+
+                    {matchup.benchOpportunities.length ? (
+                      <ul>
+                        {matchup.benchOpportunities
+                          .slice(0, 3)
+                          .map((item, i) => (
+                            <li key={i}>
+                              {item.manager}:{" "}
+                              {item.benchPlayer}
+                              {" "}over{" "}
+                              {item.starter}
+                              {" — "}
+                              +{item.potentialGain}
+                              {" "}potential points
+                              {item.wouldChangeResult
+                                ? " (would reverse result)"
+                                : ""}
+                            </li>
+                          ))}
+                      </ul>
+                    ) : (
+                      <p className="muted">
+                        No positive substitutions.
+                      </p>
+                    )}
+
+                    <h3>📊 Positional Advantages</h3>
+
+                    <ul>
+                      {matchup.positionalAdvantages
+                        .filter(item => item.advantage > 0)
+                        .slice(0, 3)
+                        .map(item => (
+                          <li key={item.position}>
+                            {item.position}:{" "}
+                            {item.leader} +{item.advantage}
+                          </li>
+                        ))}
+                    </ul>
+
+                    <hr />
+
+                    <h3>🕒 Game Window Timeline</h3>
+
+                    <p className="muted">
+                      Shows when players were scheduled
+                      to play. Not a verified live
+                      fantasy scoring timeline.
+                    </p>
+
+                    {clutch?.gameTimeline.map(item => (
+                      <div
+                        key={item.window}
+                        style={{
+                          borderTop:
+                            "1px solid #d9e2db",
+                          padding: "12px 0",
+                        }}
+                      >
+                        <strong>
+                          {windowLabels[item.window]}
+                        </strong>
+
+                        <p>
+                          {item.players.join(", ")}
+                        </p>
+                      </div>
                     ))}
-                </ul>
-              </section>
-            ))}
+
+                    <p className="muted">
+                      Confirmed comeback:{" "}
+                      {clutch?.confirmedComeback === null
+                        ? "Not available without chronological scoring"
+                        : clutch?.confirmedComeback
+                          ? "Yes"
+                          : "No"}
+                    </p>
+                  </section>
+                );
+              }
+            )}
           </div>
 
           <section
@@ -310,16 +374,22 @@ export default function AnalysisLabPage() {
             style={{ marginTop: 24 }}
           >
             <div className="label">
-              NEXT DEVELOPMENT PHASE
+              ANALYSIS METHODOLOGY
             </div>
 
-            <h2>📰 Automatic Article Writer</h2>
+            <h2>How MVPs Are Selected</h2>
 
             <p className="muted">
-              These calculations will feed the
-              AI newsletter writer, which will
-              turn each matchup into entertaining
-              sports-column paragraphs.
+              The current model combines
+              winning-team scoring contribution,
+              positive projection surprises,
+              and final-margin relevance.
+              It does not automatically favor
+              Monday night players.
+            </p>
+
+            <p className="muted">
+              {data.clutch.note}
             </p>
           </section>
         </>

@@ -2,7 +2,9 @@
 import { NextResponse } from "next/server";
 import { commissioner } from "../../../../lib/server-auth";
 import { analyzeWeek } from "../../../../lib/matchup-analysis";
+import { analyzeClutchImpact } from "../../../../lib/clutch-impact";
 import { testWeekData } from "../../../../lib/test-week-data";
+import { testGameTimings } from "../../../../lib/test-game-timings";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -20,13 +22,20 @@ export async function GET() {
   try {
     const analysis = analyzeWeek(testWeekData);
 
+    const clutch = analyzeClutchImpact(
+      testWeekData,
+      analysis,
+      testGameTimings
+    );
+
     return NextResponse.json(
       {
         success: true,
         warning: "FICTIONAL TEST DATA ONLY",
         message:
-          "Player-impact analysis engine is running.",
+          "Matchup and clutch-impact engines are running.",
         analysis,
+        clutch,
       },
       {
         headers: {
