@@ -1,362 +1,365 @@
 
 import Link from "next/link";
 
-const activeManagers = [
-  "Tyler Laird",
-  "Caleb Burnham",
-  "Lane Lehman",
-  "Braden Riley",
-  "Tyler Gay",
-  "Hunter Crownover",
-  "Hunter Kovick",
-  "Kyler Landa",
-  "Cade Burnham",
-  "Cody Carpenter",
-];
+import {
+  ACTIVE_MANAGERS,
+  LEAGUE_START_YEAR,
+} from "../../lib/league-managers";
 
-type Matchup = {
-  season: number;
-  week: number;
-  manager1: string;
-  manager2: string;
-  score1: number;
-  score2: number;
-  isPlayoff: boolean;
-};
+import {
+  calculateLifetimeRecords,
+  type HistoricalGame,
+} from "../../lib/lifetime-records";
 
-// Historical games will be imported from Yahoo.
-// Do not add unverified results here.
-const matchups: Matchup[] = [];
+import {
+  calculateRivalryRecords,
+} from "../../lib/rivalry-records";
 
-const formerManagers = [
-  "Brad McCain",
-  "John Villareal",
-  "Dillon Lowder",
-];
+import {
+  buildRivalryLeaderboards,
+} from "../../lib/rivalry-leaderboards";
 
-function formatPoints(value: number) {
-  return value.toFixed(2);
-}
+import RivalryComparison
+  from "../components/rivalry-comparison";
 
-function getManagerGames(name: string) {
-  return matchups.filter(
-    (game) =>
-      game.manager1 === name ||
-      game.manager2 === name
-  );
-}
+import RivalryMatrix
+  from "../components/rivalry-matrix";
 
-function getHeadToHead(first: string, second: string) {
-  const games = matchups
-    .filter(
-      (game) =>
-        (game.manager1 === first &&
-          game.manager2 === second) ||
-        (game.manager1 === second &&
-          game.manager2 === first)
-    )
-    .sort(
-      (a, b) =>
-        a.season - b.season ||
-        a.week - b.week
+import RivalryLeaderboards
+  from "../components/rivalry-leaderboards";
+
+export const dynamic = "force-dynamic";
+
+// Live historical data remains disconnected
+// until verification and authorization.
+//
+// Do not replace this with an unrestricted
+// Yahoo retrieval or persistent data source.
+
+const historicalGames:
+  readonly HistoricalGame[] = [];
+
+const historicalCoverageVerified = false;
+
+const publicationAuthorized = false;
+
+function CareerStandings({
+  games,
+  verified,
+}: {
+  games: readonly HistoricalGame[];
+  verified: boolean;
+}) {
+  const results =
+    calculateLifetimeRecords(
+      verified ? games : []
     );
 
-  let wins = 0;
-  let losses = 0;
-  let ties = 0;
-  let pointsFor = 0;
-  let pointsAgainst = 0;
-  let playoffWins = 0;
-  let biggestWin = 0;
-  let longestWinStreak = 0;
-  let currentStreak = 0;
-
-  for (const game of games) {
-    const firstScore =
-      game.manager1 === first
-        ? game.score1
-        : game.score2;
-
-    const secondScore =
-      game.manager1 === first
-        ? game.score2
-        : game.score1;
-
-    pointsFor += firstScore;
-    pointsAgainst += secondScore;
-
-    if (firstScore > secondScore) {
-      wins++;
-
-      if (game.isPlayoff) {
-        playoffWins++;
-      }
-
-      const margin = firstScore - secondScore;
-      biggestWin = Math.max(biggestWin, margin);
-
-      currentStreak++;
-      longestWinStreak = Math.max(
-        longestWinStreak,
-        currentStreak
-      );
-    } else if (firstScore < secondScore) {
-      losses++;
-      currentStreak = 0;
-    } else {
-      ties++;
-      currentStreak = 0;
-    }
-  }
-
-  return {
-    games: games.length,
-    wins,
-    losses,
-    ties,
-    pointsFor,
-    pointsAgainst,
-    playoffWins,
-    biggestWin,
-    longestWinStreak,
-  };
-}
-
-function getCareerRecord(name: string) {
-  const games = getManagerGames(name);
-
-  let wins = 0;
-  let losses = 0;
-  let ties = 0;
-
-  for (const game of games) {
-    const ownScore =
-      game.manager1 === name
-        ? game.score1
-        : game.score2;
-
-    const opponentScore =
-      game.manager1 === name
-        ? game.score2
-        : game.score1;
-
-    if (ownScore > opponentScore) wins++;
-    else if (ownScore < opponentScore) losses++;
-    else ties++;
-  }
-
-  return { wins, losses, ties, games: games.length };
-}
-
-function getBiggestBlowouts() {
-  return [...matchups]
-    .filter((game) => game.score1 !== game.score2)
-    .map((game) => {
-      const firstWon = game.score1 > game.score2;
-
-      return {
-        ...game,
-        winner: firstWon
-          ? game.manager1
-          : game.manager2,
-        loser: firstWon
-          ? game.manager2
-          : game.manager1,
-        winnerScore: Math.max(
-          game.score1,
-          game.score2
-        ),
-        loserScore: Math.min(
-          game.score1,
-          game.score2
-        ),
-        margin: Math.abs(
-          game.score1 - game.score2
-        ),
-      };
-    })
-    .sort((a, b) => b.margin - a.margin)
-    .slice(0, 10);
-}
-
-function getClosestGames() {
-  return [...matchups]
-    .filter((game) => game.score1 !== game.score2)
-    .map((game) => ({
-      ...game,
-      margin: Math.abs(
-        game.score1 - game.score2
-      ),
-    }))
-    .sort((a, b) => a.margin - b.margin)
-    .slice(0, 10);
-}
-
-const thStyle: React.CSSProperties = {
-  padding: "13px 12px",
-  textAlign: "left",
-  fontSize: 11,
-  fontWeight: 800,
-  whiteSpace: "nowrap",
-  background: "#edf5f0",
-  color: "#52665a",
-  borderBottom: "1px solid #dce7df",
-};
-
-const tdStyle: React.CSSProperties = {
-  padding: "13px 12px",
-  fontSize: 13,
-  whiteSpace: "nowrap",
-  borderBottom: "1px solid #e2e9e4",
-};
-
-function DataTable({
-  headings,
-  children,
-  minWidth = 700,
-}: {
-  headings: string[];
-  children: React.ReactNode;
-  minWidth?: number;
-}) {
   return (
-    <div style={{ overflowX: "auto" }}>
-      <table
+    <section
+      className="card"
+      style={{ marginTop: 24 }}
+    >
+      <div className="label">
+        ALL-TIME MATCHUP HISTORY
+      </div>
+
+      <h2 style={{ marginTop: 10 }}>
+        MANAGER CAREER STANDINGS
+      </h2>
+
+      <p
+        className="muted"
+        style={{ lineHeight: 1.7 }}
+      >
+        Career records for the active
+        managers, including official
+        historical games against
+        former league members.
+      </p>
+
+      <div
         style={{
-          width: "100%",
-          minWidth,
-          borderCollapse: "collapse",
+          overflowX: "auto",
+          marginTop: 20,
         }}
       >
-        <thead>
-          <tr>
-            {headings.map((heading) => (
-              <th key={heading} style={thStyle}>
-                {heading}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>{children}</tbody>
-      </table>
-    </div>
-  );
-}
+        <table
+          style={{
+            width: "100%",
+            minWidth: 850,
+            borderCollapse: "collapse",
+            textAlign: "left",
+            fontVariantNumeric:
+              "tabular-nums",
+          }}
+        >
+          <thead>
+            <tr>
+              {[
+                "MANAGER",
+                "WINS",
+                "LOSSES",
+                "TIES",
+                "WIN %",
+                "GAMES",
+                "POINTS FOR",
+                "PLAYOFF WINS",
+              ].map(heading => (
+                <th
+                  key={heading}
+                  scope="col"
+                  style={{
+                    background: "#edf5f0",
+                    color: "#52665a",
+                    padding: "14px 12px",
+                    fontSize: 11,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {heading}
+                </th>
+              ))}
+            </tr>
+          </thead>
 
-function EmptyRow({
-  columns,
-  message = "Awaiting verified historical Yahoo data.",
-}: {
-  columns: number;
-  message?: string;
-}) {
-  return (
-    <tr>
-      <td
-        colSpan={columns}
-        style={{
-          padding: 32,
-          textAlign: "center",
-          color: "#68736d",
-          fontSize: 13,
-        }}
-      >
-        {message}
-      </td>
-    </tr>
-  );
-}
+          <tbody>
+            {results.managers.map(
+              manager => {
+                const career =
+                  manager.career;
 
-function SectionHeader({
-  eyebrow,
-  title,
-  description,
-}: {
-  eyebrow: string;
-  title: string;
-  description: string;
-}) {
-  return (
-    <div style={{ marginBottom: 20 }}>
-      <div className="label">{eyebrow}</div>
-      <h2 style={{ marginTop: 8 }}>{title}</h2>
-      <p className="muted">{description}</p>
-    </div>
+                const hasGames =
+                  verified &&
+                  career.games > 0;
+
+                const cells = [
+                  career.wins,
+                  career.losses,
+                  career.ties,
+
+                  career.winPercentage === null
+                    ? "—"
+                    : `${career.winPercentage
+                        .toFixed(1)}%`,
+
+                  career.games,
+
+                  career.pointsFor
+                    .toFixed(2),
+
+                  manager.playoffs.wins,
+                ];
+
+                return (
+                  <tr
+                    key={manager.managerId}
+                    style={{
+                      borderBottom:
+                        "1px solid #e2e9e4",
+                    }}
+                  >
+                    <td
+                      style={{
+                        padding: "14px 12px",
+                        fontWeight: 800,
+                        fontSize: 13,
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {manager.name}
+                    </td>
+
+                    {cells.map(
+                      (value, index) => (
+                        <td
+                          key={index}
+                          style={{
+                            padding: "14px 12px",
+                            fontSize: 13,
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {hasGames
+                            ? value
+                            : "—"}
+                        </td>
+                      )
+                    )}
+                  </tr>
+                );
+              }
+            )}
+          </tbody>
+        </table>
+      </div>
+    </section>
   );
 }
 
 export default function RivalriesPage() {
-  const blowouts = getBiggestBlowouts();
-  const closest = getClosestGames();
+  const mayUseHistoricalData =
+    historicalCoverageVerified &&
+    publicationAuthorized;
 
-  const rivalryPairs = activeManagers.flatMap(
-    (first, index) =>
-      activeManagers
-        .slice(index + 1)
-        .map((second) => {
-          const stats = getHeadToHead(first, second);
+  const rivalryResults =
+    calculateRivalryRecords(
+      mayUseHistoricalData
+        ? historicalGames
+        : [],
+      mayUseHistoricalData
+    );
 
-          return {
-            first,
-            second,
-            ...stats,
-          };
-        })
-  );
+  const records =
+    rivalryResults.verified
+      ? rivalryResults.records
+      : [];
 
-  const rankedRivalries = rivalryPairs
-    .filter((pair) => pair.games > 0)
-    .sort((a, b) => b.games - a.games);
+  const leaderboards =
+    buildRivalryLeaderboards(
+      records,
+      rivalryResults.verified
+    );
 
-  const streakLeaders = rivalryPairs
-    .flatMap((pair) => {
-      const first = getHeadToHead(
-        pair.first,
-        pair.second
-      );
+  const managerCount =
+    ACTIVE_MANAGERS.length;
 
-      const second = getHeadToHead(
-        pair.second,
-        pair.first
-      );
+  const possibleRivalries =
+    managerCount *
+    (managerCount - 1) / 2;
 
-      return [
-        {
-          manager: pair.first,
-          opponent: pair.second,
-          streak: first.longestWinStreak,
-        },
-        {
-          manager: pair.second,
-          opponent: pair.first,
-          streak: second.longestWinStreak,
-        },
-      ];
-    })
-    .filter((item) => item.streak > 0)
-    .sort((a, b) => b.streak - a.streak)
-    .slice(0, 10);
+  const navigation = [
+    {
+      label: "Head-to-Head HQ",
+      href: "#comparison",
+    },
+    {
+      label: "Rivalry Matrix",
+      href: "#matrix",
+    },
+    {
+      label: "Career Standings",
+      href: "#career-standings",
+    },
+    {
+      label: "Rivalry Records",
+      href: "#rivalry-records",
+    },
+  ];
+
+  const heroStats = [
+    {
+      label: "ACTIVE MANAGERS",
+      value: managerCount,
+    },
+    {
+      label: "POSSIBLE RIVALRIES",
+      value: possibleRivalries,
+    },
+    {
+      label: "LEAGUE ESTABLISHED",
+      value: LEAGUE_START_YEAR,
+    },
+    {
+      label: "VERIFIED RIVALRY GAMES",
+      value:
+        rivalryResults.verified
+          ? rivalryResults.activeRivalryGames
+          : "—",
+    },
+  ];
 
   return (
     <main className="shell">
+      <style>{`
+        .rivalry-anchor {
+          scroll-margin-top: 145px;
+        }
+
+        .rivalry-nav {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+          margin: 24px 0;
+        }
+
+        .rivalry-nav a {
+          background: #263d32;
+          color: #ffffff;
+          font-size: 12px;
+          font-weight: 800;
+          padding: 12px 16px;
+          border-radius: 999px;
+          text-decoration: none;
+        }
+
+        .rivalry-nav a:hover {
+          background: #197655;
+        }
+
+        .rivalry-nav a:focus-visible {
+          outline: 2px solid #c9a64b;
+          outline-offset: 3px;
+        }
+
+        .rivalry-hero-grid {
+          display: grid;
+          grid-template-columns:
+            repeat(4, minmax(0, 1fr));
+          gap: 12px;
+          margin-top: 24px;
+        }
+
+        .rivalry-hero-stat {
+          background: #20382e;
+          border: 1px solid #476055;
+          border-radius: 10px;
+          padding: 18px;
+        }
+
+        .rivalry-hero-stat-label {
+          color: #c5d4cd;
+          font-size: 10px;
+          font-weight: 900;
+          letter-spacing: 1px;
+        }
+
+        .rivalry-hero-stat-value {
+          color: #48d6a8;
+          font-size: 36px;
+          font-weight: 900;
+          margin-top: 10px;
+        }
+
+        @media (max-width: 800px) {
+          .rivalry-hero-grid {
+            grid-template-columns:
+              repeat(2, minmax(0, 1fr));
+          }
+        }
+      `}</style>
+
       <div className="kicker">
-        THE BOYS • EST. 2020
+        THE BOYS • FANTASY FOOTBALL • EST. 2020
       </div>
 
       <h1>LEAGUE RIVALRIES</h1>
 
-      <p className="muted">
-        Friendships are temporary. Fantasy football
-        receipts are forever.
+      <p
+        className="muted"
+        style={{ fontSize: 17 }}
+      >
+        Friendships are temporary.
+        Fantasy football receipts
+        are forever.
       </p>
-
-      {/* RIVALRY INTRODUCTION */}
 
       <section
         style={{
           background: "#14251f",
           color: "#ffffff",
-          padding: 26,
+          padding:
+            "clamp(18px, 4vw, 32px)",
           borderRadius: 16,
           marginTop: 25,
         }}
@@ -364,8 +367,8 @@ export default function RivalriesPage() {
         <div
           style={{
             color: "#48d6a8",
-            fontSize: 12,
-            fontWeight: 800,
+            fontSize: 11,
+            fontWeight: 900,
             letterSpacing: 2,
           }}
         >
@@ -374,8 +377,10 @@ export default function RivalriesPage() {
 
         <h2
           style={{
-            fontSize: 42,
-            marginTop: 12,
+            fontSize:
+              "clamp(36px, 6vw, 64px)",
+            lineHeight: 1.05,
+            margin: "16px 0",
           }}
         >
           EVERY MATCHUP.
@@ -386,489 +391,218 @@ export default function RivalriesPage() {
         <p
           style={{
             color: "#c5d4cd",
+            maxWidth: 760,
+            lineHeight: 1.8,
+          }}
+        >
+          From the inaugural 2020 season
+          onward, every official meeting
+          adds another chapter to league
+          history. Compare managers,
+          revisit old battles and find
+          out who really owns the rivalry.
+        </p>
+
+        <div className="rivalry-hero-grid">
+          {heroStats.map(stat => (
+            <div
+              key={stat.label}
+              className="rivalry-hero-stat"
+            >
+              <div className="rivalry-hero-stat-label">
+                {stat.label}
+              </div>
+
+              <div className="rivalry-hero-stat-value">
+                {stat.value}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {!rivalryResults.verified && (
+        <div
+          style={{
+            marginTop: 20,
+            padding: 16,
+            background: "#edf5f0",
+            color: "#52665a",
+            border: "1px solid #dce7df",
+            borderRadius: 10,
+            fontSize: 13,
             lineHeight: 1.7,
           }}
         >
-          Seven seasons of rivalries, bragging rights,
-          beatdowns, and heartbreaking losses.
-          Regular-season and playoff games count
-          toward lifetime head-to-head records.
-        </p>
+          <strong>
+            Historical results pending.
+          </strong>
 
-        <span
-          className="pill"
+          {" "}The rivalry interface is
+          available, but historical
+          statistics will remain empty
+          until the required data
+          verification and publication
+          authorization are complete.
+        </div>
+      )}
+
+      <nav
+        className="rivalry-nav"
+        aria-label="Rivalry page sections"
+      >
+        {navigation.map(item => (
+          <a
+            key={item.href}
+            href={item.href}
+          >
+            {item.label}
+          </a>
+        ))}
+      </nav>
+
+      <div
+        id="comparison"
+        className="rivalry-anchor"
+      >
+        <RivalryComparison
+          records={records}
+        />
+      </div>
+
+      <div
+        id="matrix"
+        className="rivalry-anchor"
+      >
+        <RivalryMatrix
+          records={records}
+        />
+      </div>
+
+      <div
+        id="career-standings"
+        className="rivalry-anchor"
+      >
+        <CareerStandings
+          games={
+            mayUseHistoricalData
+              ? historicalGames
+              : []
+          }
+          verified={
+            rivalryResults.verified
+          }
+        />
+      </div>
+
+      <div
+        id="rivalry-records"
+        className="rivalry-anchor"
+      >
+        <RivalryLeaderboards
+          leaderboards={leaderboards}
+        />
+      </div>
+
+      <section
+        className="card"
+        style={{ marginTop: 24 }}
+      >
+        <div className="label">
+          THE OFFICIAL RECORD
+        </div>
+
+        <h2>RIVALRY TRACKING RULES</h2>
+
+        <div
           style={{
-            background: "#263d32",
-            color: "#48d6a8",
+            lineHeight: 1.8,
           }}
         >
-          10 ACTIVE MANAGERS
-        </span>
+          <p className="muted">
+            Historical records begin
+            with the 2020 season.
+            Regular-season and
+            championship-bracket
+            matchups count toward
+            official statistics.
+          </p>
+
+          <p className="muted">
+            Consolation and placement
+            games are excluded from
+            official rivalry statistics.
+          </p>
+
+          <p className="muted">
+            Only active managers appear
+            in the head-to-head matrix
+            and rivalry leaderboards.
+            Games against former managers
+            still count toward active
+            managers&apos; career records.
+          </p>
+
+          <p className="muted">
+            Rivalry winning streaks
+            count consecutive meetings
+            between the same managers,
+            even across different seasons.
+            A loss or tie ends a
+            winning streak.
+          </p>
+
+          <p className="muted">
+            Official playoff tiebreakers
+            count as wins and losses
+            rather than tied results.
+            Regular-season ties count
+            as half a win when calculating
+            win percentages.
+          </p>
+
+          <p className="muted">
+            The most competitive rivalry
+            rankings require at least
+            five official meetings.
+          </p>
+        </div>
       </section>
 
-      {/* HEAD TO HEAD MATRIX */}
-
-      <section
-        className="card"
-        style={{ marginTop: 24 }}
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 12,
+          marginTop: 28,
+        }}
       >
-        <SectionHeader
-          eyebrow="THE ULTIMATE SCORECARD"
-          title="HEAD-TO-HEAD MATRIX"
-          description="Each row shows a manager's lifetime wins and losses against every other active manager. Read each cell from the row manager's perspective."
-        />
-
-        <DataTable
-          minWidth={1450}
-          headings={[
-            "MANAGER",
-            ...activeManagers.map(
-              (name) =>
-                name.split(" ")[0] +
-                " " +
-                name.split(" ").slice(1).map(
-                  (part) => part.charAt(0) + "."
-                ).join("")
-            ),
-          ]}
+        <Link
+          href="/records"
+          className="button"
         >
-          {activeManagers.map((manager) => (
-            <tr key={manager}>
-              <td
-                style={{
-                  ...tdStyle,
-                  fontWeight: 800,
-                }}
-              >
-                {manager}
-              </td>
+          All-Time Record Book
+        </Link>
 
-              {activeManagers.map((opponent) => {
-                if (manager === opponent) {
-                  return (
-                    <td
-                      key={opponent}
-                      style={{
-                        ...tdStyle,
-                        background: "#e9efeb",
-                        textAlign: "center",
-                      }}
-                    >
-                      —
-                    </td>
-                  );
-                }
-
-                const stats = getHeadToHead(
-                  manager,
-                  opponent
-                );
-
-                return (
-                  <td
-                    key={opponent}
-                    style={{
-                      ...tdStyle,
-                      fontWeight: 700,
-                      textAlign: "center",
-                      color:
-                        stats.games === 0
-                          ? "#9aa69e"
-                          : stats.wins > stats.losses
-                          ? "#159c73"
-                          : stats.wins < stats.losses
-                          ? "#b44b4b"
-                          : "#14251f",
-                    }}
-                    title={`${manager} vs. ${opponent}`}
-                  >
-                    {stats.games
-                      ? `${stats.wins}-${stats.losses}${
-                          stats.ties
-                            ? `-${stats.ties}`
-                            : ""
-                        }`
-                      : "—"}
-                  </td>
-                );
-              })}
-            </tr>
-          ))}
-        </DataTable>
-
-        <p
-          style={{
-            fontSize: 12,
-            color: "#68736d",
-            marginTop: 15,
-          }}
+        <Link
+          href="/rafters"
+          className="button"
         >
-          Green = winning head-to-head record.
-          Red = losing head-to-head record.
-          Dashes indicate no verified imported matchup.
-        </p>
-      </section>
+          Championship Rafters
+        </Link>
 
-      {/* MANAGER RIVALRY STANDINGS */}
-
-      <section
-        className="card"
-        style={{ marginTop: 24 }}
-      >
-        <SectionHeader
-          eyebrow="ALL-TIME MATCHUP HISTORY"
-          title="MANAGER RIVALRY STANDINGS"
-          description="Lifetime records for each active manager. Games against former managers are included in career totals."
-        />
-
-        <DataTable
-          headings={[
-            "MANAGER",
-            "WINS",
-            "LOSSES",
-            "TIES",
-            "WIN %",
-            "GAMES",
-          ]}
+        <Link
+          href="/seasons"
+          className="button"
         >
-          {activeManagers
-            .map((name) => ({
-              name,
-              ...getCareerRecord(name),
-            }))
-            .sort((a, b) => b.wins - a.wins)
-            .map((manager) => (
-              <tr key={manager.name}>
-                <td
-                  style={{
-                    ...tdStyle,
-                    fontWeight: 800,
-                  }}
-                >
-                  {manager.name}
-                </td>
+          Season Archives
+        </Link>
 
-                {[
-                  manager.games
-                    ? manager.wins
-                    : "—",
-                  manager.games
-                    ? manager.losses
-                    : "—",
-                  manager.games
-                    ? manager.ties
-                    : "—",
-                  manager.games
-                    ? (
-                        (manager.wins +
-                          manager.ties / 2) /
-                        manager.games *
-                        100
-                      ).toFixed(1) + "%"
-                    : "—",
-                  manager.games || "—",
-                ].map((value, index) => (
-                  <td key={index} style={tdStyle}>
-                    {value}
-                  </td>
-                ))}
-              </tr>
-            ))}
-        </DataTable>
-      </section>
-
-      {/* MOST PLAYED RIVALRIES */}
-
-      <section
-        className="card"
-        style={{ marginTop: 24 }}
-      >
-        <SectionHeader
-          eyebrow="THE LONGEST-RUNNING BEEF"
-          title="MOST PLAYED RIVALRIES"
-          description="The active manager pairs that have faced each other the most."
-        />
-
-        <DataTable
-          headings={[
-            "RANK",
-            "RIVALRY",
-            "GAMES",
-            "HEAD-TO-HEAD",
-            "POINTS FOR / AGAINST",
-            "PLAYOFF WINS",
-          ]}
-          minWidth={950}
+        <Link
+          href="/"
+          className="button"
         >
-          {rankedRivalries.length === 0 ? (
-            <EmptyRow columns={6} />
-          ) : (
-            rankedRivalries
-              .slice(0, 25)
-              .map((pair, index) => (
-                <tr
-                  key={`${pair.first}-${pair.second}`}
-                >
-                  <td style={tdStyle}>
-                    #{index + 1}
-                  </td>
-                  <td
-                    style={{
-                      ...tdStyle,
-                      fontWeight: 800,
-                    }}
-                  >
-                    {pair.first} vs. {pair.second}
-                  </td>
-                  <td style={tdStyle}>
-                    {pair.games}
-                  </td>
-                  <td style={tdStyle}>
-                    {pair.wins}-{pair.losses}
-                    {pair.ties
-                      ? `-${pair.ties}`
-                      : ""}
-                  </td>
-                  <td style={tdStyle}>
-                    {formatPoints(pair.pointsFor)}
-                    {" / "}
-                    {formatPoints(pair.pointsAgainst)}
-                  </td>
-                  <td style={tdStyle}>
-                    {pair.playoffWins}
-                  </td>
-                </tr>
-              ))
-          )}
-        </DataTable>
-      </section>
-
-      {/* WINNING STREAKS */}
-
-      <section
-        className="card"
-        style={{ marginTop: 24 }}
-      >
-        <SectionHeader
-          eyebrow="RENT FREE"
-          title="LONGEST RIVALRY WINNING STREAKS"
-          description="The longest consecutive winning streaks by one manager against a specific opponent."
-        />
-
-        <DataTable
-          headings={[
-            "RANK",
-            "MANAGER",
-            "OPPONENT",
-            "CONSECUTIVE WINS",
-          ]}
-        >
-          {streakLeaders.length === 0 ? (
-            <EmptyRow columns={4} />
-          ) : (
-            streakLeaders.map((item, index) => (
-              <tr
-                key={`${item.manager}-${item.opponent}`}
-              >
-                <td style={tdStyle}>
-                  #{index + 1}
-                </td>
-                <td
-                  style={{
-                    ...tdStyle,
-                    fontWeight: 800,
-                  }}
-                >
-                  {item.manager}
-                </td>
-                <td style={tdStyle}>
-                  {item.opponent}
-                </td>
-                <td style={tdStyle}>
-                  {item.streak}
-                </td>
-              </tr>
-            ))
-          )}
-        </DataTable>
-      </section>
-
-      {/* BIGGEST BLOWOUTS */}
-
-      <section
-        className="card"
-        style={{ marginTop: 24 }}
-      >
-        <SectionHeader
-          eyebrow="ABSOLUTE DESTRUCTION"
-          title="BIGGEST RIVALRY BLOWOUTS"
-          description="The ten most lopsided matchups in league history."
-        />
-
-        <DataTable
-          headings={[
-            "RANK",
-            "WINNER",
-            "LOSER",
-            "SEASON / WEEK",
-            "FINAL SCORE",
-            "MARGIN",
-          ]}
-          minWidth={900}
-        >
-          {blowouts.length === 0 ? (
-            <EmptyRow columns={6} />
-          ) : (
-            blowouts.map((game, index) => (
-              <tr
-                key={`${game.season}-${game.week}-${game.winner}-${game.loser}`}
-              >
-                <td style={tdStyle}>
-                  #{index + 1}
-                </td>
-                <td
-                  style={{
-                    ...tdStyle,
-                    fontWeight: 800,
-                  }}
-                >
-                  {game.winner}
-                </td>
-                <td style={tdStyle}>
-                  {game.loser}
-                </td>
-                <td style={tdStyle}>
-                  {game.season} / W{game.week}
-                  {game.isPlayoff ? " • PLAYOFF" : ""}
-                </td>
-                <td style={tdStyle}>
-                  {formatPoints(game.winnerScore)}
-                  {" - "}
-                  {formatPoints(game.loserScore)}
-                </td>
-                <td style={tdStyle}>
-                  {formatPoints(game.margin)}
-                </td>
-              </tr>
-            ))
-          )}
-        </DataTable>
-      </section>
-
-      {/* CLOSEST GAMES */}
-
-      <section
-        className="card"
-        style={{ marginTop: 24 }}
-      >
-        <SectionHeader
-          eyebrow="HEARTBREAK HOTEL"
-          title="CLOSEST RIVALRY MATCHUPS"
-          description="The ten closest decided games in league history."
-        />
-
-        <DataTable
-          headings={[
-            "RANK",
-            "MATCHUP",
-            "SEASON / WEEK",
-            "FINAL SCORE",
-            "MARGIN",
-          ]}
-          minWidth={850}
-        >
-          {closest.length === 0 ? (
-            <EmptyRow columns={5} />
-          ) : (
-            closest.map((game, index) => (
-              <tr
-                key={`${game.season}-${game.week}-${game.manager1}-${game.manager2}`}
-              >
-                <td style={tdStyle}>
-                  #{index + 1}
-                </td>
-                <td
-                  style={{
-                    ...tdStyle,
-                    fontWeight: 800,
-                  }}
-                >
-                  {game.manager1} vs. {game.manager2}
-                </td>
-                <td style={tdStyle}>
-                  {game.season} / W{game.week}
-                  {game.isPlayoff ? " • PLAYOFF" : ""}
-                </td>
-                <td style={tdStyle}>
-                  {formatPoints(game.score1)}
-                  {" - "}
-                  {formatPoints(game.score2)}
-                </td>
-                <td style={tdStyle}>
-                  {formatPoints(game.margin)}
-                </td>
-              </tr>
-            ))
-          )}
-        </DataTable>
-      </section>
-
-      {/* HISTORICAL RULES */}
-
-      <section
-        className="card"
-        style={{ marginTop: 24 }}
-      >
-        <SectionHeader
-          eyebrow="THE OFFICIAL RECORD"
-          title="RIVALRY TRACKING RULES"
-          description="How historical matchup statistics are counted."
-        />
-
-        <p className="muted">
-          Head-to-head records include regular-season
-          and playoff games from 2020 onward.
-        </p>
-
-        <p className="muted">
-          Only the ten current managers appear in
-          active-manager rivalry rankings.
-        </p>
-
-        <p className="muted">
-          Former managers are not included in the
-          active head-to-head matrix, but historical
-          matchups against them count toward current
-          managers' career records.
-        </p>
-
-        <p className="muted">
-          Former managers retained in historical
-          matchup records: {formerManagers.join(", ")}.
-        </p>
-
-        <p className="muted">
-          Rivalry winning streaks count consecutive
-          meetings between the same managers.
-          A loss or tie ends a streak.
-        </p>
-
-        <p
-          style={{
-            color: "#159c73",
-            fontWeight: 800,
-            marginTop: 18,
-          }}
-        >
-          Verified historical data will populate
-          these tables after Yahoo API approval
-          and league-history import.
-        </p>
-      </section>
-
-      <div style={{ marginTop: 28 }}>
-        <Link href="/" className="button">
-          🏠 Home / League HQ
+          🏠 League HQ
         </Link>
       </div>
     </main>
