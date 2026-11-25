@@ -1,0 +1,52 @@
+
+name: League Accuracy Tests
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: league-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  league-accuracy:
+    name: League Accuracy and TypeScript Validation
+
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install project dependencies
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+
+      - name: Execute fictional league tests
+        run: npx --yes tsx@4.19.3 scripts/run-league-tests.ts
+
+      - name: Validate TypeScript
+        if: always()
+        run: npx tsc --noEmit
