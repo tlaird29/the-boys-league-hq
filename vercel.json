@@ -2,11 +2,7 @@
 {
   "crons": [
     {
-      "path": "/api/cron/season-finale",
-      "schedule": "0 15 * * 3"
-    },
-    {
-      "path": "/api/cron/newsletter-email",
+      "path": "/api/cron/weekly-update",
       "schedule": "0 16 * * 3"
     }
   ]
