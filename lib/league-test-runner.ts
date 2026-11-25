@@ -11,6 +11,10 @@ import {
   runHistoricalPipelineTests,
 } from "./historical-pipeline-tests";
 
+import {
+  runOfficialMatchupTests,
+} from "./official-matchup-tests";
+
 type TestResult = {
   name: string;
   passed: boolean;
@@ -30,18 +34,22 @@ function executeSuite(
   expectedTests: number,
   run: () => TestSuite
 ) {
-  const started = Date.now();
+  const started =
+    Date.now();
 
   try {
-    const suite = run();
+    const suite =
+      run();
 
     const passed =
       suite.results.filter(
-        result => result.passed
+        result =>
+          result.passed
       ).length;
 
     const failed =
-      suite.results.length - passed;
+      suite.results.length -
+      passed;
 
     const countVerified =
       suite.total === expectedTests &&
@@ -62,8 +70,11 @@ function executeSuite(
 
       expectedTests,
 
-      total: suite.results.length,
+      total:
+        suite.results.length,
+
       passed,
+
       failed,
 
       countVerified,
@@ -71,11 +82,13 @@ function executeSuite(
       durationMs:
         Date.now() - started,
 
-      results: suite.results,
+      results:
+        suite.results,
 
-      error: countVerified
-        ? null
-        : "Test count or result totals do not match.",
+      error:
+        countVerified
+          ? null
+          : "Test count or result totals do not match.",
     };
 
   } catch (error) {
@@ -83,12 +96,15 @@ function executeSuite(
       name,
 
       ok: false,
+
       executed: false,
 
       expectedTests,
 
       total: 0,
+
       passed: 0,
+
       failed: 0,
 
       countVerified: false,
@@ -96,7 +112,8 @@ function executeSuite(
       durationMs:
         Date.now() - started,
 
-      results: [] as TestResult[],
+      results:
+        [] as TestResult[],
 
       error:
         error instanceof Error
@@ -107,7 +124,8 @@ function executeSuite(
 }
 
 export function runLeagueTests() {
-  const started = Date.now();
+  const started =
+    Date.now();
 
   const suites = [
     executeSuite(
@@ -127,12 +145,19 @@ export function runLeagueTests() {
       21,
       runHistoricalPipelineTests
     ),
+
+    executeSuite(
+      "Official matchup and schedule validation",
+      15,
+      runOfficialMatchupTests
+    ),
   ];
 
   const expectedTests =
     suites.reduce(
       (total, suite) =>
-        total + suite.expectedTests,
+        total +
+        suite.expectedTests,
       0
     );
 
@@ -179,16 +204,21 @@ export function runLeagueTests() {
 
     summary: {
       expectedTests,
+
       totalTests,
+
       passedTests,
+
       failedTests,
+
       unexecutedTests,
 
       passPercentage:
         expectedTests > 0
           ? Math.round(
               passedTests /
-              expectedTests * 10000
+              expectedTests *
+              10000
             ) / 100
           : 0,
 
@@ -211,6 +241,7 @@ export function runLeagueTests() {
     emailsSent: 0,
 
     liveProcessing: false,
+
     recordsPublished: false,
   };
 }

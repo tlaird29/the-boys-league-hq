@@ -34,6 +34,14 @@ import {
 } from "./championship-bracket";
 
 import {
+  prepareHistoricalEvidence,
+} from "./official-historical-evidence";
+
+import {
+  validateOfficialGameCounts,
+} from "./official-schedule-validation";
+
+import {
   calculateAllTimeRecords,
 } from "./all-time-records";
 
@@ -110,6 +118,9 @@ type SeasonReport = {
 
   gamesVerified: number;
 
+  excludedConsolationMatchups:
+    number;
+
   championshipVerified: boolean;
 };
 
@@ -121,12 +132,10 @@ export function validateEightTeamBracket(
   const issues: string[] = [];
 
   if (
-    bracket.playoffTeamKeys.length !==
-      HISTORICAL_PLAYOFF_RULES.playoffTeams ||
+    bracket.playoffTeamKeys.length !== 8 ||
     new Set(
       bracket.playoffTeamKeys
-    ).size !==
-      HISTORICAL_PLAYOFF_RULES.playoffTeams
+    ).size !== 8
   ) {
     issues.push(
       "Championship bracket must contain eight unique playoff teams."
@@ -151,20 +160,28 @@ export function validateEightTeamBracket(
     },
   ] as const;
 
-  if (bracket.rounds.length !== 3) {
+  if (
+    bracket.rounds.length !== 3
+  ) {
     issues.push(
       "Championship bracket must contain three rounds."
     );
   }
 
-  for (const expected of expectedRounds) {
+  for (
+    const expected of
+    expectedRounds
+  ) {
     const matchingRounds =
       bracket.rounds.filter(
         round =>
-          round.round === expected.round
+          round.round ===
+          expected.round
       );
 
-    if (matchingRounds.length !== 1) {
+    if (
+      matchingRounds.length !== 1
+    ) {
       issues.push(
         `Missing or duplicated ${expected.round} round.`
       );
@@ -172,7 +189,8 @@ export function validateEightTeamBracket(
       continue;
     }
 
-    const round = matchingRounds[0];
+    const round =
+      matchingRounds[0];
 
     if (
       round.matchups.length !==
@@ -183,13 +201,17 @@ export function validateEightTeamBracket(
       );
     }
 
-    if (round.byeTeamKeys.length !== 0) {
+    if (
+      round.byeTeamKeys.length !== 0
+    ) {
       issues.push(
         "Eight-team championship bracket cannot contain byes."
       );
     }
 
-    if (round.week !== expected.week) {
+    if (
+      round.week !== expected.week
+    ) {
       issues.push(
         `Unexpected week for ${expected.round}.`
       );
@@ -204,8 +226,7 @@ export function validateEightTeamBracket(
     );
 
   if (
-    totalMatchups !==
-    HISTORICAL_PLAYOFF_RULES.totalMatchups
+    totalMatchups !== 7
   ) {
     issues.push(
       "Championship bracket must contain seven matchups."
@@ -248,7 +269,8 @@ export function runHistoricalPipeline(
 
   const globalIssues: string[] = [];
 
-  const reports: SeasonReport[] = [];
+  const reports:
+    SeasonReport[] = [];
 
   const verifiedGames:
     HistoricalGame[] = [];
@@ -256,12 +278,16 @@ export function runHistoricalPipeline(
   const completedSeasons:
     CompletedSeason[] = [];
 
-  const evidenceBySeason = new Map<
-    number,
-    HistoricalSeasonEvidence
-  >();
+  const evidenceBySeason =
+    new Map<
+      number,
+      HistoricalSeasonEvidence
+    >();
 
-  for (const evidence of input.seasons) {
+  for (
+    const evidence of
+    input.seasons
+  ) {
     if (
       !Number.isInteger(
         evidence.season
@@ -309,10 +335,17 @@ export function runHistoricalPipeline(
   ) {
     const report: SeasonReport = {
       season,
+
       status: "needs-review",
+
       stage: "league-discovery",
+
       issues: [],
+
       gamesVerified: 0,
+
+      excludedConsolationMatchups: 0,
+
       championshipVerified: false,
     };
 
@@ -322,7 +355,8 @@ export function runHistoricalPipeline(
       const selected =
         discovery.verifiedLeagues.find(
           entry =>
-            entry.league.season === season
+            entry.league.season ===
+            season
         );
 
       if (!selected) {
@@ -333,7 +367,8 @@ export function runHistoricalPipeline(
         continue;
       }
 
-      const league = selected.league;
+      const league =
+        selected.league;
 
       if (
         season < input.throughSeason &&
@@ -346,12 +381,15 @@ export function runHistoricalPipeline(
         continue;
       }
 
-      const evidence =
-        evidenceBySeason.get(season);
+      const originalEvidence =
+        evidenceBySeason.get(
+          season
+        );
 
       if (
-        !evidence ||
-        evidence.leagueKey !== league.key
+        !originalEvidence ||
+        originalEvidence.leagueKey !==
+          league.key
       ) {
         report.issues.push(
           "Historical season evidence is missing or belongs to another league."
@@ -364,9 +402,10 @@ export function runHistoricalPipeline(
         "manager-identification";
 
       if (
-        evidence.teams.some(
+        originalEvidence.teams.some(
           team =>
-            team.leagueKey !== league.key ||
+            team.leagueKey !==
+              league.key ||
             team.season !== season
         )
       ) {
@@ -379,7 +418,7 @@ export function runHistoricalPipeline(
 
       const managers =
         resolveHistoricalManagers(
-          evidence.teams,
+          originalEvidence.teams,
           input.verifiedManagerIdentities,
           input.confirmedTeamAssignments,
           season,
@@ -389,11 +428,38 @@ export function runHistoricalPipeline(
       if (!managers.verified) {
         report.issues.push(
           ...managers.conflicts,
+
           `${managers.unresolved.length} unresolved manager identities.`
         );
 
         continue;
       }
+
+      report.stage =
+        "official-matchup-preparation";
+
+      const prepared =
+        prepareHistoricalEvidence(
+          league,
+          originalEvidence
+        );
+
+      report.excludedConsolationMatchups =
+        prepared.excludedConsolationMatchups;
+
+      if (
+        !prepared.verified ||
+        !prepared.evidence
+      ) {
+        report.issues.push(
+          ...prepared.issues
+        );
+
+        continue;
+      }
+
+      const evidence =
+        prepared.evidence;
 
       report.stage =
         "matchup-collection";
@@ -416,16 +482,22 @@ export function runHistoricalPipeline(
           evidence.throughWeek
         );
 
-      if (!collection.collectionComplete) {
+      if (
+        !collection.collectionComplete
+      ) {
         report.issues.push(
           ...collection.issues,
+
           ...collection.missingWeeks.map(
             week =>
               `Missing historical week ${week}.`
           )
         );
 
-        for (const result of weeklyResults) {
+        for (
+          const result of
+          weeklyResults
+        ) {
           if (!result.verified) {
             report.issues.push(
               ...result.issues.map(
@@ -440,18 +512,27 @@ export function runHistoricalPipeline(
       }
 
       report.stage =
-        "schedule-reconciliation";
+        "official-game-count-validation";
 
-      if (
-        evidence.schedule.throughWeek !==
-        evidence.throughWeek
-      ) {
+      const gameCounts =
+        validateOfficialGameCounts(
+          collection.games,
+          evidence.schedule.regularSeasonEndWeek,
+          league.startWeek,
+          evidence.throughWeek,
+          league.teamCount
+        );
+
+      if (!gameCounts.verified) {
         report.issues.push(
-          "Schedule and scoreboard cutoffs do not match."
+          ...gameCounts.issues
         );
 
         continue;
       }
+
+      report.stage =
+        "schedule-reconciliation";
 
       const reconciliation =
         reconcileHistoricalSeason(
@@ -462,9 +543,12 @@ export function runHistoricalPipeline(
           collection.games
         );
 
-      if (!reconciliation.verified) {
+      if (
+        !reconciliation.verified
+      ) {
         report.issues.push(
           ...reconciliation.issues,
+
           ...reconciliation.audit.issues.map(
             issue => issue.message
           )
@@ -474,7 +558,8 @@ export function runHistoricalPipeline(
       }
 
       let seasonChampionship:
-        CompletedSeason | null = null;
+        CompletedSeason | null =
+          null;
 
       if (league.finished) {
         report.stage =
@@ -498,7 +583,9 @@ export function runHistoricalPipeline(
             league.endWeek
           );
 
-        if (bracketIssues.length > 0) {
+        if (
+          bracketIssues.length > 0
+        ) {
           report.issues.push(
             ...bracketIssues
           );
@@ -540,17 +627,14 @@ export function runHistoricalPipeline(
         }
 
         const championRecord =
-          championship.managerPlayoffRecords
-            .find(
-              manager =>
-                manager.championshipWinner
-            );
+          championship.managerPlayoffRecords.find(
+            manager =>
+              manager.championshipWinner
+          );
 
         if (
           !championRecord ||
-          championRecord.wins !==
-            HISTORICAL_PLAYOFF_RULES
-              .championshipWinsRequired ||
+          championRecord.wins !== 3 ||
           championRecord.losses !== 0 ||
           championRecord.byes !== 0
         ) {
@@ -566,6 +650,15 @@ export function runHistoricalPipeline(
 
         report.championshipVerified =
           true;
+      } else if (
+        evidence.throughWeek >
+        evidence.schedule.regularSeasonEndWeek
+      ) {
+        report.issues.push(
+          "In-progress championship rounds require additional bracket verification."
+        );
+
+        continue;
       }
 
       verifiedGames.push(
@@ -581,13 +674,17 @@ export function runHistoricalPipeline(
       report.gamesVerified =
         reconciliation.verifiedGames.length;
 
-      report.status = "verified";
+      report.status =
+        "verified";
 
-      report.stage = "complete";
+      report.stage =
+        "complete";
 
-    } catch {
+    } catch (error) {
       report.issues.push(
-        "Historical verification encountered an unexpected error."
+        error instanceof Error
+          ? error.message
+          : "Historical verification encountered an unexpected error."
       );
     }
   }
@@ -599,16 +696,15 @@ export function runHistoricalPipeline(
   const seasonsVerified =
     reports.filter(
       report =>
-        report.status === "verified"
+        report.status ===
+        "verified"
     ).length;
 
   const verified =
     discovery.verified &&
     globalIssues.length === 0 &&
-    seasonsVerified === expectedSeasons;
-
-  // Calculate records only after
-  // every requested season passes.
+    seasonsVerified ===
+      expectedSeasons;
 
   let records:
     ReturnType<
@@ -617,10 +713,12 @@ export function runHistoricalPipeline(
 
   if (verified) {
     try {
-      records = calculateAllTimeRecords(
-        verifiedGames,
-        completedSeasons
-      );
+      records =
+        calculateAllTimeRecords(
+          verifiedGames,
+          completedSeasons
+        );
+
     } catch {
       globalIssues.push(
         "All-time record calculation failed."
@@ -634,13 +732,16 @@ export function runHistoricalPipeline(
     globalIssues.length === 0;
 
   return {
-    verified: pipelineVerified,
+    verified:
+      pipelineVerified,
 
-    status: pipelineVerified
-      ? "verified" as const
-      : "needs-review" as const,
+    status:
+      pipelineVerified
+        ? "verified" as const
+        : "needs-review" as const,
 
     expectedSeasons,
+
     seasonsVerified,
 
     completedChampionships:
@@ -648,6 +749,14 @@ export function runHistoricalPipeline(
 
     matchupsVerified:
       verifiedGames.length,
+
+    excludedConsolationMatchups:
+      reports.reduce(
+        (total, report) =>
+          total +
+          report.excludedConsolationMatchups,
+        0
+      ),
 
     coveragePercentage:
       Math.round(
@@ -664,11 +773,13 @@ export function runHistoricalPipeline(
       ),
 
     reports,
+
     globalIssues,
 
-    records: pipelineVerified
-      ? records
-      : null,
+    records:
+      pipelineVerified
+        ? records
+        : null,
 
     readyForPublication: false,
 
@@ -678,11 +789,9 @@ export function runHistoricalPipeline(
     emailsSent: 0,
 
     note:
-      "This pipeline validates supplied " +
-      "historical evidence in memory. " +
-      "Source verification, live data " +
-      "collection, consolation handling " +
-      "and publication authorization " +
-      "remain separate requirements.",
+      "Official regular-season and championship " +
+      "matchups only. Explicit consolation games " +
+      "are excluded. Live source verification " +
+      "and publication authorization remain required.",
   };
 }
