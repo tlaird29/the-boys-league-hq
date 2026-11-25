@@ -31,7 +31,7 @@ import {
 export function runHistoricalTests() {
   const a = ACTIVE_MANAGERS[0].id;
   const b = ACTIVE_MANAGERS[1].id;
-  const former = "fictional-former-manager";
+  const former: string = "fictional-former-manager";
 
   const year = LEAGUE_START_YEAR;
 
