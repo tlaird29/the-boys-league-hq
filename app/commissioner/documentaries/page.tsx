@@ -27,6 +27,9 @@ import DocumentaryGraphics
 import DocumentaryVideo
   from "./documentary-video";
 
+import DocumentaryArchive
+  from "./documentary-archive";
+
 export const dynamic = "force-dynamic";
 
 export default async function DocumentaryPage() {
@@ -91,6 +94,33 @@ export default async function DocumentaryPage() {
       }
     });
 
+  const navigation = [
+    {
+      label: "Script Review",
+      href: "#script-review",
+    },
+    {
+      label: "Version History",
+      href: "#version-history",
+    },
+    {
+      label: "Narration",
+      href: "#narration",
+    },
+    {
+      label: "Graphics",
+      href: "#graphics",
+    },
+    {
+      label: "Video Production",
+      href: "#video-production",
+    },
+    {
+      label: "Annual Archive",
+      href: "#annual-archive",
+    },
+  ];
+
   return (
     <main className="shell">
 
@@ -101,11 +131,11 @@ export default async function DocumentaryPage() {
       <h1>DOCUMENTARY HQ</h1>
 
       <p className="muted">
-        Review season storylines,
-        original narration, production
-        timelines and supporting evidence
-        before approving annual league
-        documentaries.
+        The complete documentary development
+        workspace for The Boys League HQ.
+        Review storylines, approve scripts,
+        preview narration, develop graphics
+        and review demonstration videos.
       </p>
 
       <section
@@ -123,31 +153,98 @@ export default async function DocumentaryPage() {
         </strong>
 
         <p className="muted">
-          Documentary drafts, editorial
-          revisions and review decisions
-          can be saved. Approved scripts
-          are available for local narration,
-          animated graphics previews and
-          silent demonstration video export.
+          The demonstration workflow includes
+          persistent script reviews, editorial
+          version history, local narration,
+          animated graphics and silent video
+          export.
         </p>
 
         <p className="muted">
-          Real Yahoo data, paid AI generation,
-          synchronized audio production,
-          permanent video storage and
-          publication remain disabled.
+          The annual production queue
+          automatically follows the existing
+          season archive calendar.
+        </p>
+
+        <p className="muted">
+          Real Yahoo processing, paid AI
+          generation, synchronized audio,
+          permanent video storage, automated
+          production and publication remain
+          disabled in this workflow.
         </p>
       </section>
 
-      <PersistentReviewPanel />
+      <nav
+        aria-label="Documentary production sections"
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 8,
+          marginBottom: 24,
+        }}
+      >
+        {navigation.map(item => (
+          <a
+            key={item.href}
+            href={item.href}
+            style={{
+              background: "#173d30",
+              border: "1px solid #315747",
+              borderRadius: 7,
+              padding: "10px 14px",
+              color: "#edf7f1",
+              fontSize: 12,
+              fontWeight: 800,
+              textDecoration: "none",
+            }}
+          >
+            {item.label}
+          </a>
+        ))}
+      </nav>
 
-      <DocumentaryVersions />
+      <div
+        id="script-review"
+        style={{ scrollMarginTop: 140 }}
+      >
+        <PersistentReviewPanel />
+      </div>
 
-      <DocumentaryNarration />
+      <div
+        id="version-history"
+        style={{ scrollMarginTop: 140 }}
+      >
+        <DocumentaryVersions />
+      </div>
 
-      <DocumentaryGraphics />
+      <div
+        id="narration"
+        style={{ scrollMarginTop: 140 }}
+      >
+        <DocumentaryNarration />
+      </div>
 
-      <DocumentaryVideo />
+      <div
+        id="graphics"
+        style={{ scrollMarginTop: 140 }}
+      >
+        <DocumentaryGraphics />
+      </div>
+
+      <div
+        id="video-production"
+        style={{ scrollMarginTop: 140 }}
+      >
+        <DocumentaryVideo />
+      </div>
+
+      <div
+        id="annual-archive"
+        style={{ scrollMarginTop: 140 }}
+      >
+        <DocumentaryArchive />
+      </div>
 
       <details
         style={{
