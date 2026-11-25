@@ -18,6 +18,12 @@ const navigation = [
 export default function LeagueNavigation() {
   const pathname = usePathname();
 
+  // Keep the original dashboard navigation.
+  // Hide the global navigation on the homepage.
+  if (pathname === "/") {
+    return null;
+  }
+
   function isActive(href: string) {
     if (href === "/") {
       return pathname === "/";
