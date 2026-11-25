@@ -5,19 +5,15 @@ import {
 } from "../../../lib/server-auth";
 
 import {
-  createDocumentaryTestInput,
-  createFictionalScript,
-} from "../../../lib/documentary-test-data";
+  DOCUMENTARY_DEMO_IDS,
+  buildDocumentaryDemoDraft,
+} from "../../../lib/documentary-demo-draft";
 
-import {
-  prepareDocumentaryGeneration,
-} from "../../../lib/documentary-script-generator";
+import DocumentaryReview
+  from "./documentary-review";
 
-import {
-  validateDocumentaryScript,
-} from "../../../lib/documentary-script-validation";
-
-import DocumentaryReview from "./documentary-review";
+import PersistentReviewPanel
+  from "./persistent-review-panel";
 
 export const dynamic = "force-dynamic";
 
@@ -31,92 +27,61 @@ export default async function DocumentaryPage() {
           THE BOYS • COMMISSIONER
         </div>
 
-        <h1>COMMISSIONER SIGN IN REQUIRED</h1>
+        <h1>
+          COMMISSIONER SIGN IN REQUIRED
+        </h1>
 
-        <Link href="/login" className="button">
+        <Link
+          href="/login"
+          className="button"
+        >
           Commissioner Sign In
         </Link>
       </main>
     );
   }
 
-  const styles = [
-    "dominant",
-    "comeback",
-  ] as const;
-
-  const previews = styles.map(style => {
-    const input =
-      createDocumentaryTestInput(style);
-
-    const generation =
-      prepareDocumentaryGeneration(input);
-
-    if (
-      !generation.verified ||
-      !generation.brief
-    ) {
-      return {
-        id: style,
-        label:
-          style === "dominant"
-            ? "Dominant champion"
-            : "Championship comeback",
-        brief: null,
-        review: null,
-        issues: generation.issues,
-        warnings: [],
-      };
-    }
-
-    const brief = generation.brief;
-
-    const script =
-      createFictionalScript(
-        brief.season,
-        brief.centralStory.id,
-        brief.championship.id
-      );
-
-    script.title =
-      style === "dominant"
-        ? "THE REIGN OF TERROR"
-        : "AGAINST ALL ODDS";
-
-    script.subtitle =
-      style === "dominant"
-        ? "A fictional dominant championship season"
-        : "A fictional championship comeback";
-
-    const validation =
-      validateDocumentaryScript(
-        script,
-        brief
-      );
-
-    return {
-      id: style,
-
-      label:
-        style === "dominant"
+  const previews =
+    DOCUMENTARY_DEMO_IDS.map(id => {
+      const label =
+        id === "dominant"
           ? "Dominant champion"
-          : "Championship comeback",
+          : "Championship comeback";
 
-      brief,
+      try {
+        const demo =
+          buildDocumentaryDemoDraft(id);
 
-      review: validation.review,
+        return {
+          id,
+          label,
+          brief: demo.brief,
+          review: demo.review,
+          issues: [],
+          warnings: demo.warnings,
+        };
 
-      issues: validation.issues,
+      } catch (error) {
+        return {
+          id,
+          label,
+          brief: null,
+          review: null,
 
-      warnings: [
-        ...generation.warnings,
-        ...validation.warnings,
-      ],
-    };
-  });
+          issues: [
+            error instanceof Error
+              ? error.message
+              : "Preview unavailable.",
+          ],
+
+          warnings: [],
+        };
+      }
+    });
 
   return (
     <main className="shell">
+
       <div className="kicker">
         THE BOYS • ORIGINAL PRODUCTIONS
       </div>
@@ -124,15 +89,69 @@ export default async function DocumentaryPage() {
       <h1>DOCUMENTARY HQ</h1>
 
       <p className="muted">
-        Review season storylines, original
-        narration, production timelines and
-        supporting evidence before approving
-        annual league documentaries.
+        Review season storylines,
+        original narration, production
+        timelines and supporting evidence
+        before approving annual league
+        documentaries.
       </p>
 
-      <DocumentaryReview
-        previews={previews}
-      />
+      <section
+        style={{
+          border: "1px solid #315747",
+          borderRadius: 10,
+          padding: 18,
+          marginBottom: 24,
+        }}
+      >
+        <strong
+          style={{ color: "#48d6a8" }}
+        >
+          FICTIONAL PRODUCTION MODE
+        </strong>
+
+        <p className="muted">
+          Documentary drafts and review
+          decisions can now be saved.
+          Real Yahoo data, paid AI generation,
+          video rendering and publication
+          remain disabled.
+        </p>
+      </section>
+
+      <PersistentReviewPanel />
+
+      <details
+        style={{
+          marginTop: 30,
+          marginBottom: 24,
+          border: "1px solid #315747",
+          borderRadius: 10,
+          padding: 18,
+        }}
+      >
+        <summary
+          style={{
+            cursor: "pointer",
+            fontWeight: 800,
+          }}
+        >
+          STORYLINE & PRODUCTION PREVIEW
+        </summary>
+
+        <p className="muted">
+          This is the original production
+          simulator. Review actions inside
+          this preview are temporary.
+          Use the persistent review panel
+          above to save official demo
+          decisions.
+        </p>
+
+        <DocumentaryReview
+          previews={previews}
+        />
+      </details>
 
       <div
         style={{
@@ -163,6 +182,7 @@ export default async function DocumentaryPage() {
           YEAR IN REVIEW
         </Link>
       </div>
+
     </main>
   );
 }
