@@ -2,9 +2,13 @@ import type {
   DocumentaryScript,
 } from "./documentary-script-types";
 
+export type PreviewId =
+  | "dominant"
+  | "comeback";
+
 export type DemoDraft = {
   id: string;
-  preview_id: "dominant" | "comeback";
+  preview_id: PreviewId;
   season: number;
   version: number;
   script: DocumentaryScript;
@@ -22,7 +26,10 @@ export type DemoDraft = {
 export type DemoHistory = {
   id: string;
   draft_id: string;
-  action: string;
+  action:
+    | "created"
+    | "revision-requested"
+    | "demo-approved";
   notes: string | null;
   created_at: string;
 };
@@ -32,10 +39,10 @@ export type DemoReviewData = {
   history: DemoHistory[];
 };
 
-type DemoAction =
+export type DemoAction =
   | {
       action: "create";
-      previewId: "dominant" | "comeback";
+      previewId: PreviewId;
     }
   | {
       action:
@@ -43,7 +50,7 @@ type DemoAction =
         | "demo-approved";
       draftId: string;
       version: number;
-      notes: string;
+      notes?: string;
       reviewed: boolean;
     };
 
@@ -53,13 +60,14 @@ const ENDPOINT =
 async function readResponse(
   response: Response
 ) {
-  const data = await response.json();
+  const data = await response
+    .json()
+    .catch(() => null);
 
-  if (!response.ok || data.ok !== true) {
+  if (!response.ok || !data?.ok) {
     throw new Error(
-      typeof data.error === "string"
-        ? data.error
-        : "Documentary request failed."
+      data?.error ||
+      "Documentary request failed."
     );
   }
 
@@ -68,6 +76,7 @@ async function readResponse(
 
 export async function loadDemoReviews():
   Promise<DemoReviewData> {
+
   const response = await fetch(
     ENDPOINT,
     {
@@ -97,13 +106,13 @@ export async function loadDemoReviews():
 
 export async function submitDemoAction(
   action: DemoAction
-) {
+): Promise<DemoDraft> {
   const response = await fetch(
     ENDPOINT,
     {
       method: "POST",
-
       credentials: "same-origin",
+      cache: "no-store",
 
       headers: {
         "Content-Type":
@@ -114,5 +123,17 @@ export async function submitDemoAction(
     }
   );
 
-  return readResponse(response);
+  const data =
+    await readResponse(response);
+
+  if (
+    !data.draft ||
+    data.draft.fictional !== true
+  ) {
+    throw new Error(
+      "Invalid fictional draft response."
+    );
+  }
+
+  return data.draft;
 }
