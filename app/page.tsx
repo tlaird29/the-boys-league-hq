@@ -1,9 +1,16 @@
 
 import Link from "next/link";
-import type { CSSProperties } from "react";
+
+import type {
+  CSSProperties,
+} from "react";
+
 import {
   latestPublishedNewsletter,
 } from "../lib/published-newsletters";
+
+import RecordWatch
+  from "./components/record-watch";
 
 export const dynamic = "force-dynamic";
 
@@ -24,7 +31,8 @@ const paper = "#f4f0e4";
 const rule = "#38352d";
 
 const smallPrint: CSSProperties = {
-  fontFamily: "Arial, Helvetica, sans-serif",
+  fontFamily:
+    "Arial, Helvetica, sans-serif",
   fontSize: 10,
   fontWeight: 800,
   letterSpacing: 1.2,
@@ -32,7 +40,8 @@ const smallPrint: CSSProperties = {
 };
 
 const paragraphStyle: CSSProperties = {
-  fontFamily: "Georgia, 'Times New Roman', serif",
+  fontFamily:
+    "Georgia, 'Times New Roman', serif",
   fontSize: 17,
   lineHeight: 1.82,
   color: ink,
@@ -43,14 +52,21 @@ const paragraphStyle: CSSProperties = {
 
 const fallback = {
   week: "NEXT EDITION COMING SOON",
-  headline: "THE BOYS ARE AT IT AGAIN",
+
+  headline:
+    "THE BOYS ARE AT IT AGAIN",
+
   subtitle:
     "Ten managers. Five matchups. One weekly reminder that confidence and competence are not the same thing.",
+
   paragraphs: [
     "The Boys Fantasy Football League is preparing another edition of its most respected, least professionally supervised publication. Ten managers enter every week convinced they've built a championship roster. By Tuesday morning, half of them are investigating whether Yahoo accidentally forgot to count somebody's touchdowns.",
+
     "The Wednesday Report will cover all five matchups in one continuous sports column. Expect player-impact analysis, questionable lineup decisions, family rivalries, roommate arguments, and enough trash talk to keep the group chat busy until the next kickoff.",
-    "Once Yahoo is connected and the commissioner approves the first verified article, it will appear here automatically. Previous editions will remain in the archive.",
+
+    "Once verified league information is authorized for publication and the commissioner approves an article, the latest edition will appear here. Previous authorized editions will remain in the archive.",
   ],
+
   closing: "ICE TF UP! 🏈",
 };
 
@@ -65,16 +81,18 @@ const emptyGoat: WeeklyHonor = {
   name: null,
   team: null,
   points: null,
+
   commentary:
-    "Awarded to the highest-scoring fantasy team of the week, regardless of matchup result. Awaiting confirmed Yahoo scores.",
+    "Awarded to the highest-scoring fantasy team of the week, regardless of matchup result. Awaiting verified and authorized results.",
 };
 
 const emptyBum: WeeklyHonor = {
   name: null,
   team: null,
   points: null,
+
   commentary:
-    "Awarded to the lowest-scoring fantasy team of the week, regardless of matchup result. Awaiting confirmed Yahoo scores.",
+    "Awarded to the lowest-scoring fantasy team of the week, regardless of matchup result. Awaiting verified and authorized results.",
 };
 
 const positions = [
@@ -117,8 +135,9 @@ function PerfectTeamColumn() {
           marginBottom: 17,
         }}
       >
-        The highest-scoring possible starting lineup
-        from the week's eligible players.
+        The highest-scoring possible
+        starting lineup from the
+        week&apos;s eligible players.
       </p>
 
       <div
@@ -140,15 +159,18 @@ function PerfectTeamColumn() {
           key={position}
           style={{
             display: "grid",
-            gridTemplateColumns: "40px 1fr auto",
+            gridTemplateColumns:
+              "40px 1fr auto",
             gap: 6,
             padding: "11px 0",
-            borderBottom: "1px solid #c5bdab",
+            borderBottom:
+              "1px solid #c5bdab",
           }}
         >
           <strong style={smallPrint}>
             {position}
           </strong>
+
           <span
             style={{
               fontFamily: "Georgia, serif",
@@ -157,6 +179,7 @@ function PerfectTeamColumn() {
           >
             Awaiting results
           </span>
+
           <strong>—</strong>
         </div>
       ))}
@@ -166,10 +189,14 @@ function PerfectTeamColumn() {
           display: "flex",
           justifyContent: "space-between",
           padding: "15px 0",
-          borderBottom: `3px double ${rule}`,
+          borderBottom:
+            `3px double ${rule}`,
         }}
       >
-        <strong style={smallPrint}>TOTAL</strong>
+        <strong style={smallPrint}>
+          TOTAL
+        </strong>
+
         <strong>—</strong>
       </div>
 
@@ -183,9 +210,9 @@ function PerfectTeamColumn() {
           marginTop: 13,
         }}
       >
-        Official lineup eligibility will follow
-        Yahoo league settings. No player can
-        appear twice.
+        Official lineup eligibility will
+        follow verified league settings.
+        No player can appear twice.
       </p>
     </aside>
   );
@@ -205,10 +232,13 @@ function HonorFeature({
       style={{
         paddingBottom: 23,
         marginBottom: 25,
-        borderBottom: `3px double ${rule}`,
+        borderBottom:
+          `3px double ${rule}`,
       }}
     >
-      <div style={smallPrint}>{eyebrow}</div>
+      <div style={smallPrint}>
+        {eyebrow}
+      </div>
 
       <h3
         style={{
@@ -234,7 +264,8 @@ function HonorFeature({
             fontWeight: 800,
           }}
         >
-          {honor.name ?? "TO BE ANNOUNCED"}
+          {honor.name ??
+            "TO BE ANNOUNCED"}
         </div>
 
         {honor.team && (
@@ -279,27 +310,6 @@ function HonorFeature({
 }
 
 function AroundTheLeague() {
-  const items = [
-    {
-      eyebrow: "THE FEATURED MATCHUP",
-      title: "MATCHUP OF THE WEEK",
-      body:
-        "Awaiting confirmed Yahoo league data. The featured matchup and head-to-head history will appear here once connected.",
-    },
-    {
-      eyebrow: "HISTORY IN THE MAKING",
-      title: "RECORD WATCH",
-      body:
-        "Awaiting verified historical data. This column will spotlight all-time wins, scoring milestones, and league records.",
-    },
-    {
-      eyebrow: "THE TRANSACTION WIRE",
-      title: "LEAGUE ACTIVITY",
-      body:
-        "Awaiting confirmed Yahoo transactions. Completed trades, waiver activity, and league announcements will appear here.",
-    },
-  ];
-
   return (
     <section
       aria-label="Around the League"
@@ -322,7 +332,8 @@ function AroundTheLeague() {
       <h2
         style={{
           fontFamily: "Georgia, serif",
-          fontSize: "clamp(30px,5vw,48px)",
+          fontSize:
+            "clamp(30px,5vw,48px)",
           textAlign: "center",
           margin: "12px 0 22px",
         }}
@@ -331,50 +342,221 @@ function AroundTheLeague() {
       </h2>
 
       <div className="boys-front-extras">
-        {items.map(item => (
-          <section key={item.title}>
-            <div style={smallPrint}>
-              {item.eyebrow}
+        <section>
+          <div style={smallPrint}>
+            THE FEATURED MATCHUP
+          </div>
+
+          <h3
+            style={{
+              fontFamily: "Georgia, serif",
+              fontSize: 24,
+              margin: "12px 0",
+            }}
+          >
+            MATCHUP OF THE WEEK
+          </h3>
+
+          <p
+            style={{
+              ...paragraphStyle,
+              fontSize: 15,
+            }}
+          >
+            Every week brings another
+            opportunity for revenge,
+            bragging rights and
+            questionable lineup decisions.
+          </p>
+
+          <div
+            style={{
+              borderTop:
+                `3px double ${rule}`,
+              borderBottom:
+                `3px double ${rule}`,
+              padding: "20px 0",
+              textAlign: "center",
+            }}
+          >
+            <div
+              style={{
+                ...smallPrint,
+                color: faded,
+              }}
+            >
+              FEATURED MATCHUP
             </div>
 
             <h3
               style={{
                 fontFamily: "Georgia, serif",
-                fontSize: 24,
-                margin: "12px 0",
+                fontSize: 22,
+                margin: "15px 0",
               }}
             >
-              {item.title}
+              TO BE ANNOUNCED
             </h3>
 
-            <p
+            <div
               style={{
-                ...paragraphStyle,
-                fontSize: 15,
+                color: "#197655",
+                fontSize: 25,
+                fontWeight: 900,
               }}
             >
-              {item.body}
-            </p>
-          </section>
-        ))}
+              VS
+            </div>
+
+            <h3
+              style={{
+                fontFamily: "Georgia, serif",
+                fontSize: 22,
+                margin: "15px 0",
+              }}
+            >
+              TO BE ANNOUNCED
+            </h3>
+
+            <div
+              style={{
+                ...smallPrint,
+                color: faded,
+              }}
+            >
+              AWAITING VERIFIED MATCHUPS
+            </div>
+          </div>
+
+          <Link
+            href="/rivalries"
+            style={{
+              display: "inline-block",
+              marginTop: 18,
+              color: "#197655",
+              fontSize: 12,
+              fontWeight: 900,
+              textDecoration: "underline",
+              textUnderlineOffset: 4,
+            }}
+          >
+            EXPLORE LEAGUE RIVALRIES →
+          </Link>
+        </section>
+
+        <RecordWatch />
+
+        <section>
+          <div style={smallPrint}>
+            THE TRANSACTION WIRE
+          </div>
+
+          <h3
+            style={{
+              fontFamily: "Georgia, serif",
+              fontSize: 24,
+              margin: "12px 0",
+            }}
+          >
+            LEAGUE ACTIVITY
+          </h3>
+
+          <p
+            style={{
+              ...paragraphStyle,
+              fontSize: 15,
+            }}
+          >
+            The latest trades, waiver
+            activity and announcements
+            from around the league.
+          </p>
+
+          {[
+            {
+              title: "TRADE WIRE",
+              body:
+                "Awaiting authorized trade updates.",
+            },
+            {
+              title: "WAIVER WATCH",
+              body:
+                "Awaiting authorized roster activity.",
+            },
+            {
+              title: "COMMISSIONER'S DESK",
+              body:
+                "Official league announcements will appear here.",
+            },
+          ].map(item => (
+            <div
+              key={item.title}
+              style={{
+                padding: "16px 0",
+                borderBottom:
+                  "1px solid #c6beac",
+              }}
+            >
+              <div
+                style={{
+                  ...smallPrint,
+                  color: "#197655",
+                }}
+              >
+                {item.title}
+              </div>
+
+              <p
+                style={{
+                  ...paragraphStyle,
+                  fontSize: 14,
+                  margin: "8px 0 0",
+                }}
+              >
+                {item.body}
+              </p>
+            </div>
+          ))}
+
+          <Link
+            href="/trade-hub"
+            style={{
+              display: "inline-block",
+              marginTop: 18,
+              color: "#197655",
+              fontSize: 12,
+              fontWeight: 900,
+              textDecoration: "underline",
+              textUnderlineOffset: 4,
+            }}
+          >
+            VISIT THE TRADE HUB →
+          </Link>
+        </section>
       </div>
     </section>
   );
 }
 
 export default async function Home() {
-  const published = await latestPublishedNewsletter();
+  const published =
+    await latestPublishedNewsletter();
 
-  const intro = published?.sections.find(
-    section => section.id === "intro"
-  );
+  const intro =
+    published?.sections.find(
+      section => section.id === "intro"
+    );
 
   const allParagraphs = published
-    ? published.sections.flatMap(section =>
-        section.body
-          .split(/\n\s*\n/)
-          .map(paragraph => paragraph.trim())
-          .filter(Boolean)
+    ? published.sections.flatMap(
+        section =>
+          section.body
+            .split(/\n\s*\n/)
+            .map(
+              paragraph =>
+                paragraph.trim()
+            )
+            .filter(Boolean)
       )
     : fallback.paragraphs;
 
@@ -383,17 +565,24 @@ export default async function Home() {
         week:
           `SEASON ${published.year} • ` +
           `WEEK ${published.week}`,
+
         headline:
-          intro?.title || "THE WEDNESDAY REPORT",
+          intro?.title ||
+          "THE WEDNESDAY REPORT",
+
         subtitle:
           `The Boys • Season ${published.year} ` +
           `• Week ${published.week}`,
+
         paragraphs: allParagraphs,
       }
     : {
         week: fallback.week,
+
         headline: fallback.headline,
+
         subtitle: fallback.subtitle,
+
         paragraphs: [
           ...fallback.paragraphs,
           fallback.closing,
@@ -401,19 +590,24 @@ export default async function Home() {
       };
 
   const lastParagraph =
-    edition.paragraphs[edition.paragraphs.length - 1] ||
-    "";
+    edition.paragraphs[
+      edition.paragraphs.length - 1
+    ] || "";
 
   const hasClosing =
-    lastParagraph.endsWith("ICE TF UP! 🏈");
+    lastParagraph.endsWith(
+      "ICE TF UP! 🏈"
+    );
 
-  const articleParagraphs = hasClosing
-    ? edition.paragraphs.slice(0, -1)
-    : edition.paragraphs;
+  const articleParagraphs =
+    hasClosing
+      ? edition.paragraphs.slice(0, -1)
+      : edition.paragraphs;
 
-  const closing = hasClosing
-    ? lastParagraph
-    : "";
+  const closing =
+    hasClosing
+      ? lastParagraph
+      : "";
 
   return (
     <>
@@ -426,39 +620,51 @@ export default async function Home() {
             minmax(0,215px);
           gap: 25px;
         }
+
         .boys-perfect-team {
           min-width: 0;
-          border-right: 1px solid #aaa18e;
+          border-right:
+            1px solid #aaa18e;
           padding-right: 22px;
         }
+
         .boys-main-article {
           min-width: 0;
         }
+
         .boys-honors {
           min-width: 0;
-          border-left: 1px solid #aaa18e;
+          border-left:
+            1px solid #aaa18e;
           padding-left: 22px;
         }
+
         .boys-front-extras {
           display: grid;
           grid-template-columns:
             repeat(3,minmax(0,1fr));
           gap: 24px;
         }
+
         .boys-front-extras > section {
-          border-top: 4px double #38352d;
+          border-top:
+            4px double #38352d;
           padding-top: 16px;
           min-width: 0;
         }
+
         @media (max-width: 950px) {
           .boys-newspaper-layout {
             grid-template-columns:
-              minmax(0,190px) minmax(0,1fr);
+              minmax(0,190px)
+              minmax(0,1fr);
           }
+
           .boys-honors {
             grid-column: 1/-1;
             border-left: 0;
-            border-top: 4px double #38352d;
+            border-top:
+              4px double #38352d;
             padding-left: 0;
             padding-top: 25px;
             display: grid;
@@ -467,25 +673,31 @@ export default async function Home() {
             gap: 25px;
           }
         }
+
         @media (max-width: 800px) {
           .boys-front-extras {
             grid-template-columns: 1fr;
           }
         }
+
         @media (max-width: 650px) {
           .boys-newspaper-layout {
             grid-template-columns: 1fr;
           }
+
           .boys-main-article {
             grid-row: 1;
           }
+
           .boys-perfect-team {
             grid-row: 2;
             border-right: 0;
-            border-top: 4px double #38352d;
+            border-top:
+              4px double #38352d;
             padding-right: 0;
             padding-top: 25px;
           }
+
           .boys-honors {
             grid-row: 3;
             grid-column: 1;
@@ -502,14 +714,19 @@ export default async function Home() {
         <h1>
           THE BOYS
           <br />
-          <span style={{ color: "var(--mint)" }}>
+
+          <span
+            style={{
+              color: "var(--mint)",
+            }}
+          >
             LEAGUE HQ
           </span>
         </h1>
 
         <div className="sub">
-          SEVEN SEASONS OF GLORY, DISASTER &amp;
-          RECEIPTS.
+          GLORY, DISASTER &amp; RECEIPTS.
+          SINCE 2020.
         </div>
 
         <nav className="nav">
@@ -517,7 +734,11 @@ export default async function Home() {
             <Link
               key={url}
               href={url}
-              className={url === "/" ? "active" : ""}
+              className={
+                url === "/"
+                  ? "active"
+                  : ""
+              }
             >
               {name}
             </Link>
@@ -536,42 +757,56 @@ export default async function Home() {
           style={{
             background: paper,
             color: ink,
-            padding: "clamp(16px,3vw,42px)",
-            border: "1px solid #c6beac",
-            boxShadow: "0 10px 28px #14251f20",
+            padding:
+              "clamp(16px,3vw,42px)",
+            border:
+              "1px solid #c6beac",
+            boxShadow:
+              "0 10px 28px #14251f20",
           }}
         >
           <div
             style={{
               ...smallPrint,
               display: "flex",
-              justifyContent: "space-between",
+              justifyContent:
+                "space-between",
               flexWrap: "wrap",
               gap: 8,
               paddingBottom: 10,
-              borderBottom: `1px solid ${rule}`,
+              borderBottom:
+                `1px solid ${rule}`,
             }}
           >
             <span>EST. MMXX</span>
+
             <span>
               THE BOYS FANTASY FOOTBALL LEAGUE
             </span>
-            <span>WEDNESDAY EDITION</span>
+
+            <span>
+              WEDNESDAY EDITION
+            </span>
           </div>
 
           <div
             style={{
               textAlign: "center",
               padding: "18px 0 16px",
-              borderBottom: `5px double ${rule}`,
+              borderBottom:
+                `5px double ${rule}`,
             }}
           >
             <div
               style={{
                 fontFamily:
                   "'UnifrakturCook', Georgia, serif",
-                fontSize: "clamp(58px,10vw,118px)",
+
+                fontSize:
+                  "clamp(58px,10vw,118px)",
+
                 fontWeight: 700,
+
                 lineHeight: 1.1,
               }}
             >
@@ -592,23 +827,32 @@ export default async function Home() {
             style={{
               ...smallPrint,
               display: "flex",
-              justifyContent: "space-between",
+              justifyContent:
+                "space-between",
               flexWrap: "wrap",
               gap: 10,
               padding: "12px 0",
-              borderBottom: `2px solid ${rule}`,
+              borderBottom:
+                `2px solid ${rule}`,
             }}
           >
-            <span>THE WEDNESDAY REPORT</span>
+            <span>
+              THE WEDNESDAY REPORT
+            </span>
+
             <span>{edition.week}</span>
-            <span>PRICE: YOUR DIGNITY</span>
+
+            <span>
+              PRICE: YOUR DIGNITY
+            </span>
           </div>
 
           <section
             style={{
               textAlign: "center",
               padding: "30px 0 25px",
-              borderBottom: `1px solid ${rule}`,
+              borderBottom:
+                `1px solid ${rule}`,
             }}
           >
             <div
@@ -617,14 +861,18 @@ export default async function Home() {
                 marginBottom: 14,
               }}
             >
-              THE LEAGUE&apos;S MOST UNNECESSARY
-              INVESTIGATIVE JOURNALISM
+              THE LEAGUE&apos;S MOST
+              UNNECESSARY INVESTIGATIVE
+              JOURNALISM
             </div>
 
             <h2
               style={{
                 fontFamily: "Georgia, serif",
-                fontSize: "clamp(37px,6.5vw,76px)",
+
+                fontSize:
+                  "clamp(37px,6.5vw,76px)",
+
                 lineHeight: 1.04,
                 fontWeight: 900,
                 letterSpacing: "-0.045em",
@@ -638,7 +886,10 @@ export default async function Home() {
             <p
               style={{
                 fontFamily: "Georgia, serif",
-                fontSize: "clamp(17px,2vw,21px)",
+
+                fontSize:
+                  "clamp(17px,2vw,21px)",
+
                 fontStyle: "italic",
                 lineHeight: 1.55,
                 maxWidth: 800,
@@ -678,7 +929,8 @@ export default async function Home() {
             style={{
               paddingTop: 30,
               paddingBottom: 25,
-              borderBottom: `4px double ${rule}`,
+              borderBottom:
+                `4px double ${rule}`,
             }}
           >
             <PerfectTeamColumn />
@@ -699,12 +951,14 @@ export default async function Home() {
                     key={index}
                     style={paragraphStyle}
                   >
-                    {index === 0 && paragraph ? (
+                    {index === 0 &&
+                    paragraph ? (
                       <>
                         <span
                           style={{
                             float: "left",
-                            fontFamily: "Georgia, serif",
+                            fontFamily:
+                              "Georgia, serif",
                             fontSize: 70,
                             fontWeight: 900,
                             lineHeight: 0.85,
@@ -714,6 +968,7 @@ export default async function Home() {
                         >
                           {paragraph.charAt(0)}
                         </span>
+
                         {paragraph.slice(1)}
                       </>
                     ) : (
@@ -758,21 +1013,32 @@ export default async function Home() {
             style={{
               ...smallPrint,
               display: "flex",
-              justifyContent: "space-between",
+              justifyContent:
+                "space-between",
               flexWrap: "wrap",
               gap: 12,
               paddingTop: 15,
               marginTop: 25,
-              borderTop: `1px solid ${rule}`,
+              borderTop:
+                `1px solid ${rule}`,
             }}
           >
-            <span>THE BOYS • EST. 2020</span>
-            <span>ALL RECEIPTS PRESERVED</span>
+            <span>
+              THE BOYS • EST. 2020
+            </span>
+
+            <span>
+              ALL RECEIPTS PRESERVED
+            </span>
           </div>
         </article>
 
-        <footer style={{ textAlign: "center" }}>
-          THE BOYS • PRIVATE LEAGUE HISTORY • EST. 2020
+        <footer
+          style={{
+            textAlign: "center",
+          }}
+        >
+          THE BOYS • LEAGUE HISTORY • EST. 2020
         </footer>
       </main>
     </>
