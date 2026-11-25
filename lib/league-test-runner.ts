@@ -1,4 +1,3 @@
-
 import {
   runWeeklyInfrastructureTests,
 } from "./weekly-infrastructure-tests";
@@ -22,6 +21,10 @@ import {
 import {
   runPlayerRecordTests,
 } from "./player-record-tests";
+
+import {
+  runDocumentaryTests,
+} from "./documentary-tests";
 
 type TestResult = {
   name: string;
@@ -74,8 +77,11 @@ function executeSuite(
       expectedTests,
 
       total: suite.results.length,
+
       passed,
+
       failed,
+
       countVerified,
 
       durationMs:
@@ -94,12 +100,15 @@ function executeSuite(
       name,
 
       ok: false,
+
       executed: false,
 
       expectedTests,
 
       total: 0,
+
       passed: 0,
+
       failed: 0,
 
       countVerified: false,
@@ -155,6 +164,12 @@ export function runLeagueTests() {
       "Individual player records and scoring reconciliation",
       25,
       runPlayerRecordTests
+    ),
+
+    executeSuite(
+      "Season documentary intelligence and script validation",
+      25,
+      runDocumentaryTests
     ),
   ];
 
@@ -215,16 +230,21 @@ export function runLeagueTests() {
 
     summary: {
       expectedTests,
+
       totalTests,
+
       passedTests,
+
       failedTests,
+
       unexecutedTests,
 
       passPercentage:
         expectedTests > 0
           ? Math.round(
               passedTests /
-              expectedTests * 10000
+              expectedTests *
+              10000
             ) / 100
           : 0,
 
@@ -243,10 +263,13 @@ export function runLeagueTests() {
     suites,
 
     yahooRequests: 0,
+
     aiRequests: 0,
+
     emailsSent: 0,
 
     liveProcessing: false,
+
     recordsPublished: false,
   };
 }
