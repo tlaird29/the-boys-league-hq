@@ -1,7 +1,10 @@
-
 import Link from "next/link";
+
 import SignOutButton from "../sign-out-button";
-import { commissioner } from "../../lib/server-auth";
+
+import {
+  commissioner,
+} from "../../lib/server-auth";
 
 export default async function CommissionerPage() {
   const user = await commissioner();
@@ -15,12 +18,82 @@ export default async function CommissionerPage() {
 
         <h1>COMMISSIONER SIGN IN REQUIRED</h1>
 
-        <Link href="/login" className="button">
+        <Link
+          href="/login"
+          className="button"
+        >
           Commissioner Sign In
         </Link>
       </main>
     );
   }
+
+  const tools = [
+    {
+      label: "WEEKLY NEWSPAPER",
+      title: "📰 Newsletter Editor",
+      description:
+        "Edit storylines, regenerate sections, restore revisions, and approve newsletters for publication.",
+      href: "/commissioner/newsletters",
+      button: "OPEN NEWSLETTER EDITOR",
+    },
+    {
+      label: "AUTOMATIC SPORTS JOURNALISM",
+      title: "✍️ Article Writer",
+      description:
+        "Generate complete sports-column newsletters using player impacts, matchup analysis, game timing, and original league trash talk.",
+      href: "/commissioner/article-writer",
+      button: "OPEN ARTICLE WRITER",
+    },
+    {
+      label: "PLAYER IMPACT ENGINE",
+      title: "🏈 Matchup Analysis Lab",
+      description:
+        "Review matchup scores, player MVPs, projection busts, bench opportunities, positional advantages, and awards using fictional test data.",
+      href: "/commissioner/analysis-lab",
+      button: "OPEN ANALYSIS LAB",
+    },
+    {
+      label: "ORIGINAL PRODUCTIONS",
+      title: "🎬 Documentary HQ",
+      description:
+        "Preview season storylines, documentary narration, dynamic storyboards, supporting evidence and commissioner review. Currently in fictional preview mode.",
+      href: "/commissioner/documentaries",
+      button: "OPEN DOCUMENTARY HQ",
+    },
+    {
+      label: "EMAIL AUTOMATION",
+      title: "✉️ Email Delivery Test",
+      description:
+        "Test the Resend connection and commissioner email delivery.",
+      href: "/commissioner/test-email",
+      button: "TEST EMAIL CONNECTION",
+    },
+    {
+      label: "LEAGUE INTELLIGENCE",
+      title: "📊 Season Analysis",
+      description:
+        "Review league scoring, historical statistics, and rivalries.",
+      href: "/commissioner/season-analysis",
+      button: "OPEN SEASON ANALYSIS",
+    },
+    {
+      label: "CHAMPIONSHIP AUTOMATION",
+      title: "🎙️ Season Finale Queue",
+      description:
+        "Review prepared championship analysis and finale drafts.",
+      href: "/commissioner/season-finales",
+      button: "VIEW FINALE QUEUE",
+    },
+    {
+      label: "YAHOO FANTASY",
+      title: "🔗 League Connection",
+      description:
+        "Authorize read-only access to your Yahoo fantasy league.",
+      href: "/api/yahoo/connect",
+      button: "CONNECT YAHOO FANTASY",
+    },
+  ];
 
   return (
     <main className="shell">
@@ -32,155 +105,37 @@ export default async function CommissionerPage() {
 
       <p className="muted">
         Manage league analysis, weekly newspapers,
-        Yahoo integration, email automation,
-        and championship coverage.
+        season documentaries, Yahoo integration,
+        email automation, and championship coverage.
       </p>
 
-      <div className="grid" style={{ marginTop: 24 }}>
-        <section className="card span6">
-          <div className="label">
-            WEEKLY NEWSPAPER
-          </div>
-
-          <h2>📰 Newsletter Editor</h2>
-
-          <p className="muted">
-            Edit storylines, regenerate sections,
-            restore revisions, and approve
-            newsletters for publication.
-          </p>
-
-          <Link
-            className="button"
-            href="/commissioner/newsletters"
+      <div
+        className="grid"
+        style={{ marginTop: 24 }}
+      >
+        {tools.map(tool => (
+          <section
+            className="card span6"
+            key={tool.href}
           >
-            OPEN NEWSLETTER EDITOR
-          </Link>
-        </section>
+            <div className="label">
+              {tool.label}
+            </div>
 
-        <section className="card span6">
-          <div className="label">
-            AUTOMATIC SPORTS JOURNALISM
-          </div>
+            <h2>{tool.title}</h2>
 
-          <h2>✍️ Article Writer</h2>
+            <p className="muted">
+              {tool.description}
+            </p>
 
-          <p className="muted">
-            Generate complete sports-column
-            newsletters using player impacts,
-            matchup analysis, game timing,
-            and original league trash talk.
-          </p>
-
-          <Link
-            className="button"
-            href="/commissioner/article-writer"
-          >
-            OPEN ARTICLE WRITER
-          </Link>
-        </section>
-
-        <section className="card span6">
-          <div className="label">
-            PLAYER IMPACT ENGINE
-          </div>
-
-          <h2>🏈 Matchup Analysis Lab</h2>
-
-          <p className="muted">
-            Review matchup scores, player MVPs,
-            projection busts, bench opportunities,
-            positional advantages, and awards
-            using fictional test data.
-          </p>
-
-          <Link
-            className="button"
-            href="/commissioner/analysis-lab"
-          >
-            OPEN ANALYSIS LAB
-          </Link>
-        </section>
-
-        <section className="card span6">
-          <div className="label">
-            EMAIL AUTOMATION
-          </div>
-
-          <h2>✉️ Email Delivery Test</h2>
-
-          <p className="muted">
-            Test the Resend connection and
-            commissioner email delivery.
-          </p>
-
-          <Link
-            className="button"
-            href="/commissioner/test-email"
-          >
-            TEST EMAIL CONNECTION
-          </Link>
-        </section>
-
-        <section className="card span6">
-          <div className="label">
-            LEAGUE INTELLIGENCE
-          </div>
-
-          <h2>📊 Season Analysis</h2>
-
-          <p className="muted">
-            Review league scoring,
-            historical statistics, and rivalries.
-          </p>
-
-          <Link
-            className="button"
-            href="/commissioner/season-analysis"
-          >
-            OPEN SEASON ANALYSIS
-          </Link>
-        </section>
-
-        <section className="card span6">
-          <div className="label">
-            CHAMPIONSHIP AUTOMATION
-          </div>
-
-          <h2>🎙️ Season Finale Queue</h2>
-
-          <p className="muted">
-            Review prepared championship
-            analysis and finale drafts.
-          </p>
-
-          <Link
-            className="button"
-            href="/commissioner/season-finales"
-          >
-            VIEW FINALE QUEUE
-          </Link>
-        </section>
-
-        <section className="card span6">
-          <div className="label">
-            YAHOO FANTASY
-          </div>
-
-          <h2>🔗 League Connection</h2>
-
-          <p className="muted">
-            Authorize read-only access to
-            your Yahoo fantasy league.
-          </p>
-
-          <Link
-            className="button"
-            href="/api/yahoo/connect"
-          >
-            CONNECT YAHOO FANTASY
-          </Link>
-        </section>
+            <Link
+              className="button"
+              href={tool.href}
+            >
+              {tool.button}
+            </Link>
+          </section>
+        ))}
       </div>
 
       <div
@@ -191,7 +146,10 @@ export default async function CommissionerPage() {
           flexWrap: "wrap",
         }}
       >
-        <Link href="/" className="button">
+        <Link
+          href="/"
+          className="button"
+        >
           BACK TO DASHBOARD
         </Link>
 
