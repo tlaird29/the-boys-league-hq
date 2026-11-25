@@ -1,5 +1,8 @@
 
-import { NextRequest, NextResponse } from "next/server";
+import {
+  NextRequest,
+  NextResponse,
+} from "next/server";
 
 import {
   getBoiseDate,
@@ -19,6 +22,10 @@ import {
   extractManagerIds,
   getCandidateWeek,
 } from "../../../../lib/yahoo-week-discovery";
+
+import {
+  runHistoricalTests,
+} from "../../../../lib/historical-tests";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -188,7 +195,9 @@ function runFictionalTest() {
   };
 }
 
-export async function GET(req: NextRequest) {
+export async function GET(
+  req: NextRequest
+) {
   const secret = process.env.CRON_SECRET;
 
   if (
@@ -225,49 +234,114 @@ export async function GET(req: NextRequest) {
   let claimed = false;
 
   try {
-    claimed = await claimWeeklyRun(runDate);
+    claimed = await claimWeeklyRun(
+      runDate,
+      "dry-run"
+    );
 
     if (!claimed) {
       return result({
         ok: true,
         executed: false,
-        reason: "Weekly run already claimed.",
+        reason: "Weekly dry run already claimed.",
         runDate,
       });
     }
 
-    const tests = runFictionalTest();
+    // Test weekly league discovery
+    // and scheduling infrastructure.
 
-    await finishWeeklyRun(
-      runDate,
-      "completed"
-    );
+    const infrastructureTests =
+      runFictionalTest();
+
+    // Test all historical record engines.
+
+    const historicalTests =
+      runHistoricalTests();
+
+    const infrastructureCount =
+      Object.keys(
+        infrastructureTests
+      ).length;
+
+    const totalTests =
+      infrastructureCount +
+      historicalTests.total;
+
+    const passedTests =
+      infrastructureCount +
+      historicalTests.passed;
+
+    const failedTests =
+      historicalTests.failed;
 
     const report = {
-      ok: true,
+      ok: historicalTests.ok,
       executed: true,
       mode: "fictional-dry-run",
       runDate,
-      tests,
+
+      summary: {
+        totalTests,
+        passedTests,
+        failedTests,
+
+        passPercentage:
+          totalTests > 0
+            ? Math.round(
+                passedTests /
+                totalTests * 10000
+              ) / 100
+            : 0,
+      },
+
+      infrastructureTests,
+
+      historicalTests,
+
       yahooRequests: 0,
       aiRequests: 0,
       emailsSent: 0,
+
       liveProcessing: false,
+      recordsPublished: false,
     };
 
+    if (!historicalTests.ok) {
+      await finishWeeklyRun(
+        runDate,
+        "failed",
+        "dry-run"
+      );
+
+      console.error(
+        "Historical accuracy tests failed.",
+        report
+      );
+
+      return result(report, 500);
+    }
+
+    await finishWeeklyRun(
+      runDate,
+      "completed",
+      "dry-run"
+    );
+
     console.info(
-      "Weekly automation dry run passed.",
+      "Weekly automation and historical tests passed.",
       report
     );
 
     return result(report);
 
-  } catch {
+  } catch (error) {
     if (claimed) {
       try {
         await finishWeeklyRun(
           runDate,
-          "failed"
+          "failed",
+          "dry-run"
         );
       } catch {
         console.error(
@@ -276,18 +350,29 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Unknown infrastructure error.";
+
     console.error(
-      "Weekly automation dry run failed."
+      "Weekly automation dry run failed.",
+      message
     );
 
     return result(
       {
         ok: false,
         mode: "fictional-dry-run",
-        error: "Weekly infrastructure test failed.",
+        runDate,
+        error: message,
+
         yahooRequests: 0,
         aiRequests: 0,
         emailsSent: 0,
+
+        liveProcessing: false,
+        recordsPublished: false,
       },
       500
     );
