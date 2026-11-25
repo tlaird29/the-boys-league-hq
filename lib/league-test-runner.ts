@@ -19,6 +19,10 @@ import {
   runHistoricalExtractionTests,
 } from "./historical-extraction-tests";
 
+import {
+  runPlayerRecordTests,
+} from "./player-record-tests";
+
 type TestResult = {
   name: string;
   passed: boolean;
@@ -145,6 +149,12 @@ export function runLeagueTests() {
       "Historical extraction and evidence processing",
       20,
       runHistoricalExtractionTests
+    ),
+
+    executeSuite(
+      "Individual player records and scoring reconciliation",
+      25,
+      runPlayerRecordTests
     ),
   ];
 
