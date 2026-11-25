@@ -15,6 +15,10 @@ import {
   runOfficialMatchupTests,
 } from "./official-matchup-tests";
 
+import {
+  runHistoricalExtractionTests,
+} from "./historical-extraction-tests";
+
 type TestResult = {
   name: string;
   passed: boolean;
@@ -34,27 +38,22 @@ function executeSuite(
   expectedTests: number,
   run: () => TestSuite
 ) {
-  const started =
-    Date.now();
+  const started = Date.now();
 
   try {
-    const suite =
-      run();
+    const suite = run();
 
     const passed =
       suite.results.filter(
-        result =>
-          result.passed
+        result => result.passed
       ).length;
 
     const failed =
-      suite.results.length -
-      passed;
+      suite.results.length - passed;
 
     const countVerified =
       suite.total === expectedTests &&
-      suite.results.length ===
-        expectedTests &&
+      suite.results.length === expectedTests &&
       suite.passed === passed &&
       suite.failed === failed;
 
@@ -70,20 +69,15 @@ function executeSuite(
 
       expectedTests,
 
-      total:
-        suite.results.length,
-
+      total: suite.results.length,
       passed,
-
       failed,
-
       countVerified,
 
       durationMs:
         Date.now() - started,
 
-      results:
-        suite.results,
+      results: suite.results,
 
       error:
         countVerified
@@ -96,15 +90,12 @@ function executeSuite(
       name,
 
       ok: false,
-
       executed: false,
 
       expectedTests,
 
       total: 0,
-
       passed: 0,
-
       failed: 0,
 
       countVerified: false,
@@ -112,8 +103,7 @@ function executeSuite(
       durationMs:
         Date.now() - started,
 
-      results:
-        [] as TestResult[],
+      results: [] as TestResult[],
 
       error:
         error instanceof Error
@@ -124,8 +114,7 @@ function executeSuite(
 }
 
 export function runLeagueTests() {
-  const started =
-    Date.now();
+  const started = Date.now();
 
   const suites = [
     executeSuite(
@@ -151,13 +140,18 @@ export function runLeagueTests() {
       15,
       runOfficialMatchupTests
     ),
+
+    executeSuite(
+      "Historical extraction and evidence processing",
+      20,
+      runHistoricalExtractionTests
+    ),
   ];
 
   const expectedTests =
     suites.reduce(
       (total, suite) =>
-        total +
-        suite.expectedTests,
+        total + suite.expectedTests,
       0
     );
 
@@ -183,9 +177,15 @@ export function runLeagueTests() {
     );
 
   const unexecutedTests =
-    Math.max(
-      0,
-      expectedTests - totalTests
+    suites.reduce(
+      (total, suite) =>
+        total +
+        Math.max(
+          0,
+          suite.expectedTests -
+          suite.total
+        ),
+      0
     );
 
   const ok =
@@ -194,7 +194,8 @@ export function runLeagueTests() {
     ) &&
     totalTests === expectedTests &&
     passedTests === expectedTests &&
-    failedTests === 0;
+    failedTests === 0 &&
+    unexecutedTests === 0;
 
   return {
     ok,
@@ -204,21 +205,16 @@ export function runLeagueTests() {
 
     summary: {
       expectedTests,
-
       totalTests,
-
       passedTests,
-
       failedTests,
-
       unexecutedTests,
 
       passPercentage:
         expectedTests > 0
           ? Math.round(
               passedTests /
-              expectedTests *
-              10000
+              expectedTests * 10000
             ) / 100
           : 0,
 
@@ -241,7 +237,6 @@ export function runLeagueTests() {
     emailsSent: 0,
 
     liveProcessing: false,
-
     recordsPublished: false,
   };
 }
