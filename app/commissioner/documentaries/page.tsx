@@ -21,6 +21,9 @@ import DocumentaryVersions
 import DocumentaryNarration
   from "./documentary-narration";
 
+import DocumentaryGraphics
+  from "./documentary-graphics";
+
 export const dynamic = "force-dynamic";
 
 export default async function DocumentaryPage() {
@@ -121,13 +124,13 @@ export default async function DocumentaryPage() {
           revisions and review decisions
           can be saved. Approved scripts
           are available for local narration
-          previews.
+          and animated graphics previews.
         </p>
 
         <p className="muted">
           Real Yahoo data, paid AI generation,
           final audio production, video
-          rendering and publication remain
+          export and publication remain
           disabled.
         </p>
       </section>
@@ -137,6 +140,8 @@ export default async function DocumentaryPage() {
       <DocumentaryVersions />
 
       <DocumentaryNarration />
+
+      <DocumentaryGraphics />
 
       <details
         style={{
