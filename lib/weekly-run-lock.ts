@@ -1,6 +1,14 @@
 
 import { db } from "./yahoo";
 
+export type RunMode =
+  | "dry-run"
+  | "production";
+
+export type RunStatus =
+  | "completed"
+  | "failed";
+
 export function getBoiseDate(
   date = new Date()
 ): string {
@@ -36,7 +44,8 @@ export function getBoiseDate(
 }
 
 export async function claimWeeklyRun(
-  runDate: string
+  runDate: string,
+  mode: RunMode = "dry-run"
 ): Promise<boolean> {
   const database = db();
 
@@ -44,6 +53,7 @@ export async function claimWeeklyRun(
     .from("weekly_update_runs")
     .insert({
       run_date: runDate,
+      run_mode: mode,
       status: "running",
     });
 
@@ -62,7 +72,8 @@ export async function claimWeeklyRun(
 
 export async function finishWeeklyRun(
   runDate: string,
-  status: "completed" | "failed"
+  status: RunStatus,
+  mode: RunMode = "dry-run"
 ): Promise<void> {
   const database = db();
 
@@ -73,6 +84,7 @@ export async function finishWeeklyRun(
       finished_at: new Date().toISOString(),
     })
     .eq("run_date", runDate)
+    .eq("run_mode", mode)
     .eq("status", "running")
     .select("run_date")
     .maybeSingle();
