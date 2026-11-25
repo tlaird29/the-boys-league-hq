@@ -15,6 +15,9 @@ import DocumentaryReview
 import PersistentReviewPanel
   from "./persistent-review-panel";
 
+import DocumentaryVersions
+  from "./documentary-versions";
+
 export const dynamic = "force-dynamic";
 
 export default async function DocumentaryPage() {
@@ -111,8 +114,14 @@ export default async function DocumentaryPage() {
         </strong>
 
         <p className="muted">
-          Documentary drafts and review
-          decisions can now be saved.
+          Documentary drafts, editorial
+          revisions and review decisions
+          can now be saved. Previous
+          script versions remain available
+          in the version history.
+        </p>
+
+        <p className="muted">
           Real Yahoo data, paid AI generation,
           video rendering and publication
           remain disabled.
@@ -120,6 +129,8 @@ export default async function DocumentaryPage() {
       </section>
 
       <PersistentReviewPanel />
+
+      <DocumentaryVersions />
 
       <details
         style={{
