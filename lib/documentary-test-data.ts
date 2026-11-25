@@ -1,5 +1,6 @@
 import {
   ACTIVE_MANAGERS,
+  type ManagerId,
 } from "./league-managers";
 
 import type {
@@ -27,7 +28,7 @@ export function createFictionalSeason(
   style: FictionalSeasonStyle = "dominant",
   championIndex = 0
 ): SeasonStorylineInput {
-  const managerIds =
+  const managerIds: ManagerId[] =
     ACTIVE_MANAGERS.map(
       manager => manager.id
     );
@@ -45,9 +46,9 @@ export function createFictionalSeason(
 
   function addGame(
     week: number,
-    first: string,
-    second: string,
-    winner: string,
+    first: ManagerId,
+    second: ManagerId,
+    winner: ManagerId,
     isPlayoffs = false
   ) {
     const winningPoints =
@@ -83,7 +84,9 @@ export function createFictionalSeason(
     });
   }
 
-  let rotation = [...managerIds];
+  let rotation: ManagerId[] = [
+    ...managerIds,
+  ];
 
   for (
     let week = 1;
@@ -103,7 +106,7 @@ export function createFictionalSeason(
           rotation.length - 1 - index
         ];
 
-      let winner =
+      let winner: ManagerId =
         (week + index) % 2 === 0
           ? first
           : second;
@@ -178,9 +181,10 @@ export function createFictionalSeason(
       )
   );
 
-  const playoffTeams = standings
-    .slice(0, 8)
-    .map(row => row.managerId);
+  const playoffTeams: ManagerId[] =
+    standings
+      .slice(0, 8)
+      .map(row => row.managerId);
 
   if (!playoffTeams.includes(champion)) {
     throw new Error(
@@ -188,7 +192,7 @@ export function createFictionalSeason(
     );
   }
 
-  let remaining = [
+  let remaining: ManagerId[] = [
     champion,
     ...playoffTeams.filter(
       id => id !== champion
@@ -200,7 +204,7 @@ export function createFictionalSeason(
     round <= 3;
     round++
   ) {
-    const winners: string[] = [];
+    const winners: ManagerId[] = [];
 
     for (
       let index = 0;
